@@ -2,16 +2,16 @@
 Span contexts should be immutable
 ]]
 
-local rand_bytes = require "openssl.rand".bytes
+local digest = require('digest')
 
 -- For zipkin compat, use 128 bit trace ids
 local function generate_trace_id()
-	return rand_bytes(16)
+	return digest.urandom(16)
 end
 
 -- For zipkin compat, use 64 bit span ids
 local function generate_span_id()
-	return rand_bytes(8)
+	return digest.urandom(8)
 end
 
 local span_context_methods = {}
@@ -112,6 +112,6 @@ function span_context_methods:each_baggage_item()
 end
 
 return {
-	new = new;
-	is = is;
+	new = new,
+	is = is,
 }

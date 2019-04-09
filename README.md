@@ -10,18 +10,13 @@ To fully understand this platform API, it's helpful to be familiar with the [Ope
 
 ## Quick Start
 
-Install the package using `luarocks`
+Install the package using `tarantoolctl rocks`
 
 ```bash
-luarocks install opentracing
+tarantoolctl rocks make
 ```
 
 
 ## Conventions
 
   - All timestamps are in seconds
-
-
-## License
-
-Apache License 2.0

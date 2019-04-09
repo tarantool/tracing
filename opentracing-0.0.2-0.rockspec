@@ -2,20 +2,17 @@ package = "opentracing"
 version = "0.0.2-0"
 
 source = {
-	url = "https://github.com/kong/opentracing-lua/archive/v0.0.2.zip";
-	dir = "opentracing-lua-0.0.2";
+	url = "https://gitlab.com/tarantool/enterprise/tracing.git";
 }
 
 description = {
 	summary = "Lua platform API for OpenTracing";
-	homepage = "https://github.com/kong/opentracing-lua";
-	license = "Apache 2.0";
+	homepage = "https://gitlab.com/tarantool/enterprise/tracing";
 }
 
 dependencies = {
 	"lua >= 5.1";
-	"luatz";
-	"luaossl";
+	"tarantool";
 }
 
 build = {

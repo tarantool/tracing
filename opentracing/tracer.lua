@@ -1,6 +1,6 @@
-local gettime = require "luatz.gettime".gettime
-local opentracing_span = require "opentracing.span"
-local opentracing_span_context = require "opentracing.span_context"
+local clock = require("clock")
+local opentracing_span = require("opentracing.span")
+local opentracing_span_context = require("opentracing.span_context")
 
 local tracer_methods = {}
 local tracer_mt = {
@@ -95,7 +95,7 @@ end
 -- Spans belonging to this tracer will get timestamps via this method
 -- Can be overridden for e.g. testing
 function tracer_methods:time() -- luacheck: ignore 212
-	return gettime()
+	return clock.realtime()
 end
 
 function tracer_methods:report(span)
@@ -138,6 +138,6 @@ function tracer_methods:extract(format, carrier)
 end
 
 return {
-	new = new;
-	is = is;
+	new = new,
+	is = is,
 }
