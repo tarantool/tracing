@@ -13,6 +13,7 @@ description = {
 dependencies = {
 	"lua >= 5.1",
 	"tarantool",
+	"checks >= 3.0.0",
 }
 
 build = {

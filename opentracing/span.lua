@@ -6,6 +6,8 @@ You can find it documented in this OpenAPI spec:
 https://github.com/openzipkin/zipkin-api/blob/7e33e977/zipkin2-api.yaml#L280
 --]]
 
+local checks = require('checks')
+
 local span_methods = {}
 local span_mt = {
 	__name = 'opentracing.span',
@@ -17,11 +19,7 @@ local function is(object)
 end
 
 local function new(tracer, context, name, start_timestamp)
-	assert(tracer, 'missing tracer')
-	assert(context, 'missing context')
-	assert(type(name) == 'string', 'name should be a string')
-	assert(type(start_timestamp) == 'number' or type(start_timestamp) == 'cdata',
-			'invalid starting timestamp')
+	checks('table', 'table', 'string', 'number|cdata')
 	return setmetatable({
 		tracer_ = tracer,
 		context_ = context,
@@ -37,19 +35,22 @@ local function new(tracer, context, name, start_timestamp)
 end
 
 function span_methods:context()
+	checks('table')
 	return self.context_
 end
 
 function span_methods:tracer()
+	checks('table')
 	return self.tracer_
 end
 
 function span_methods:set_operation_name(name)
-	assert(type(name) == 'string', 'name should be a string')
+	checks('table', 'string')
 	self.name = name
 end
 
 function span_methods:start_child_span(name, start_timestamp)
+	checks('table', 'string', '?number|cdata')
 	return self.tracer_:start_span(name, {
 		start_timestamp = start_timestamp,
 		child_of = self,
@@ -57,14 +58,16 @@ function span_methods:start_child_span(name, start_timestamp)
 end
 
 function span_methods:finish(finish_timestamp)
-	assert(self.duration == nil, 'span already finished')
+	checks('table', '?number|cdata')
+	if self.duration ~= nil then
+		return false, 'span already finished'
+	end
 	if finish_timestamp == nil then
 		self.duration = self.tracer_:time() - self.timestamp
 	else
-		assert(type(finish_timestamp) == 'number')
 		local duration = finish_timestamp - self.timestamp
-		assert(duration >= 0, 'invalid finish timestamp')
-		self.duration = duration
+		-- TODO: May be log the fact then duration is negative
+		self.duration = duration >= 0 and duration or 0
 	end
 	if self.context_.should_sample then
 		self.tracer_:report(self)
@@ -73,12 +76,7 @@ function span_methods:finish(finish_timestamp)
 end
 
 function span_methods:set_tag(key, value)
-	assert(type(key) == 'string', 'invalid tag key')
-	if value ~= nil then -- Validate value
-		local vt = type(value)
-		assert(vt == 'string' or vt == 'number' or vt == 'boolean',
-			'invalid tag value (expected string, number, boolean or nil)')
-	end
+	checks('table', 'string', '?')
 	local tags = self.tags
 	if tags then
 		tags[key] = value
@@ -92,7 +90,7 @@ function span_methods:set_tag(key, value)
 end
 
 function span_methods:get_tag(key)
-	assert(type(key) == 'string', 'invalid tag key')
+	checks('table', 'string')
 	local tags = self.tags
 	if tags then
 		return tags[key]
@@ -102,18 +100,17 @@ function span_methods:get_tag(key)
 end
 
 function span_methods:each_tag()
+	checks('table')
 	local tags = self.tags
 	if tags == nil then return function() end end
 	return next, tags
 end
 
 function span_methods:log(key, value, timestamp)
-	assert(type(key) == 'string', 'invalid log key')
+	checks('table', 'string', '?', '?number|cdata')
 	-- `value` is allowed to be anything.
 	if timestamp == nil then
 		timestamp = self.tracer_:time()
-	else
-		assert(type(timestamp) == 'number', 'invalid timestamp for log')
 	end
 
 	local log = {
@@ -136,10 +133,9 @@ function span_methods:log(key, value, timestamp)
 end
 
 function span_methods:log_kv(key_values, timestamp)
+	checks('table', 'table', '?number|cdata')
 	if timestamp == nil then
 		timestamp = self.tracer_:time()
-	else
-		assert(type(timestamp) == 'number', 'invalid timestamp for log')
 	end
 
 	local logs = self.logs
@@ -166,6 +162,7 @@ function span_methods:log_kv(key_values, timestamp)
 end
 
 function span_methods:each_log()
+	checks('table')
 	local i = 0
 	return function(logs)
 		if i >= self.n_logs then
@@ -185,10 +182,12 @@ function span_methods:set_baggage_item(key, value)
 end
 
 function span_methods:get_baggage_item(key)
+	checks('table', 'string')
 	return self.context_:get_baggage_item(key)
 end
 
 function span_methods:each_baggage_item()
+	checks('table')
 	return self.context_:each_baggage_item()
 end
 

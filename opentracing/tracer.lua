@@ -1,4 +1,5 @@
 local clock = require("clock")
+local checks = require("checks")
 local opentracing_span = require("opentracing.span")
 local opentracing_span_context = require("opentracing.span_context")
 
@@ -30,12 +31,10 @@ local extractors_metatable = {
 }
 
 local function new(reporter, sampler)
-	if reporter == nil then
-		reporter = no_op_reporter
-	end
-	if sampler == nil then
-		sampler = no_op_sampler
-	end
+	checks('?table', '?table')
+	reporter = reporter or no_op_reporter
+	sampler = sampler or no_op_sampler
+
 	return setmetatable({
 		injectors = setmetatable({}, injectors_metatable),
 		extractors = setmetatable({}, extractors_metatable),
@@ -44,34 +43,36 @@ local function new(reporter, sampler)
 	}, tracer_mt)
 end
 
-function tracer_methods:start_span(name, options)
+function tracer_methods:start_span(name, opts)
+	opts = opts or {}
+	checks('table', 'string', {
+		child_of = '?table',
+		references = '?table',
+		tags = '?table',
+		start_timestamp = '?number|cdata',
+	})
+
 	local context, child_of, references, tags, extra_tags, start_timestamp
-	if options ~= nil then
-		child_of = options.child_of
-		references = options.references
-		if child_of ~= nil then
-			assert(references == nil, "cannot specify both references and child_of")
-			if opentracing_span.is(child_of) then
-				child_of = child_of:context()
-			else
-				assert(opentracing_span_context.is(child_of), "child_of should be a span or span context")
-			end
+	child_of = opts.child_of
+	references = opts.references
+
+	if child_of ~= nil then
+		assert(references == nil, "cannot specify both references and child_of")
+		if opentracing_span.is(child_of) then
+			child_of = child_of:context()
+		else
+			assert(opentracing_span_context.is(child_of), "child_of should be a span or span context")
 		end
-		if references ~= nil then
-			assert(type(references) == "table", "references should be a table")
-			error("references NYI")
-		end
-		tags = options.tags
-		if tags ~= nil then
-			assert(type(tags) == "table", "tags should be a table")
-		end
-		start_timestamp = options.start_timestamp
-		-- Allow opentracing_span.new to validate
 	end
-	if start_timestamp == nil then
-		start_timestamp = self:time()
+	if references ~= nil then
+		error("references NYI")
 	end
-	if child_of then
+
+	tags = opts.tags
+	start_timestamp = opts.start_timestamp or self:time()
+	-- Allow opentracing_span.new to validate
+
+	if child_of ~= nil then
 		context = child_of:child()
 	else
 		local should_sample
@@ -79,12 +80,12 @@ function tracer_methods:start_span(name, options)
 		context = opentracing_span_context.new(nil, nil, nil, should_sample)
 	end
 	local span = opentracing_span.new(self, context, name, start_timestamp)
-	if extra_tags then
+	if extra_tags ~= nil then
 		for k, v in pairs(extra_tags) do
 			span:set_tag(k, v)
 		end
 	end
-	if tags then
+	if tags ~= nil then
 		for k, v in pairs(tags) do
 			span:set_tag(k, v)
 		end
@@ -95,28 +96,29 @@ end
 -- Spans belonging to this tracer will get timestamps in microseconds via this method
 -- Can be overridden for e.g. testing
 function tracer_methods:time() -- luacheck: ignore 212
+	checks('table')
 	return clock.realtime64() / 1000
 end
 
 function tracer_methods:report(span)
+	checks('table', 'table')
 	return self.reporter:report(span)
 end
 
 function tracer_methods:register_injector(format, injector)
-	assert(format, "invalid format")
-	assert(injector, "invalid injector")
+	checks('table', 'string', '?')
 	self.injectors[format] = injector
 	return true
 end
 
 function tracer_methods:register_extractor(format, extractor)
-	assert(format, "invalid format")
-	assert(extractor, "invalid extractor")
+	checks('table', 'string', '?')
 	self.extractors[format] = extractor
 	return true
 end
 
 function tracer_methods:inject(context, format, carrier)
+	checks('table', 'table', 'string', '?')
 	if opentracing_span.is(context) then
 		context = context:context()
 	else
@@ -124,15 +126,16 @@ function tracer_methods:inject(context, format, carrier)
 	end
 	local injector = self.injectors[format]
 	if injector == nil then
-		error("Unknown format: " .. format)
+		return nil, "Unknown format: " .. format
 	end
 	return injector(context, carrier)
 end
 
 function tracer_methods:extract(format, carrier)
+	checks('table', 'string', '?')
 	local extractor = self.extractors[format]
 	if extractor == nil then
-		error("Unknown format: " .. format)
+		return nil, "Unknown format: " .. format
 	end
 	return extractor(carrier)
 end
