@@ -27,9 +27,9 @@ local function new(tracer, context, name, start_timestamp)
 		timestamp = start_timestamp,
 		duration = nil,
 		-- Avoid allocations until needed
-		baggage = nil,
-		tags = nil,
-		logs = nil,
+		baggage = {},
+		tags = {},
+		logs = {},
 		n_logs = 0,
 	}, span_mt)
 end
@@ -77,15 +77,7 @@ end
 
 function span_methods:set_tag(key, value)
 	checks('table', 'string', '?')
-	local tags = self.tags
-	if tags then
-		tags[key] = value
-	elseif value ~= nil then
-		tags = {
-			[key] = value
-		}
-		self.tags = tags
-	end
+	self.tags[key] = value
 	return true
 end
 
@@ -106,12 +98,15 @@ function span_methods:each_tag()
 	return next, tags
 end
 
+function span_methods:tags()
+	checks('table')
+	return table.deepcopy(self.tags)
+end
+
 function span_methods:log(key, value, timestamp)
-	checks('table', 'string', '?', '?number|cdata')
 	-- `value` is allowed to be anything.
-	if timestamp == nil then
-		timestamp = self.tracer_:time()
-	end
+	checks('table', 'string', '?', '?number|cdata')
+	timestamp = timestamp or self.tracer_:time()
 
 	local log = {
 		key = key,
@@ -119,45 +114,24 @@ function span_methods:log(key, value, timestamp)
 		timestamp = timestamp,
 	}
 
-	local logs = self.logs
-	if logs then
-		local i = self.n_logs + 1
-		logs[i] = log
-		self.n_logs = i
-	else
-		logs = { log }
-		self.logs = logs
-		self.n_logs = 1
-	end
+	self.logs[self.n_logs + 1] = log
+	self.n_logs = self.n_logs + 1
 	return true
 end
 
 function span_methods:log_kv(key_values, timestamp)
 	checks('table', 'table', '?number|cdata')
-	if timestamp == nil then
-		timestamp = self.tracer_:time()
-	end
-
-	local logs = self.logs
-	local n_logs
-	if logs then
-		n_logs = 0
-	else
-		n_logs = self.n_logs
-		logs = { }
-		self.logs = logs
-	end
+	timestamp = timestamp or self.tracer_:time()
 
 	for key, value in pairs(key_values) do
-		n_logs = n_logs + 1
-		logs[n_logs] = {
+		self.n_logs = self.n_logs + 1
+		self.logs[self.n_logs] = {
 			key = key,
 			value = value,
 			timestamp = timestamp,
 		}
 	end
 
-	self.n_logs = n_logs
 	return true
 end
 
@@ -176,8 +150,7 @@ end
 
 function span_methods:set_baggage_item(key, value)
 	-- Create new context so that baggage is immutably passed around
-	local newcontext = self.context_:clone_with_baggage_item(key, value)
-	self.context_ = newcontext
+	self.context_ = self.context_:clone_with_baggage_item(key, value)
 	return true
 end
 

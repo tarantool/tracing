@@ -52,9 +52,8 @@ function tracer_methods:start_span(name, opts)
 		start_timestamp = '?number|cdata',
 	})
 
-	local context, child_of, references, tags, extra_tags, start_timestamp
-	child_of = opts.child_of
-	references = opts.references
+	local child_of = opts.child_of
+	local references = opts.references
 
 	if child_of ~= nil then
 		assert(references == nil, "cannot specify both references and child_of")
@@ -68,10 +67,11 @@ function tracer_methods:start_span(name, opts)
 		error("references NYI")
 	end
 
-	tags = opts.tags
-	start_timestamp = opts.start_timestamp or self:time()
+	local tags = opts.tags
+	local start_timestamp = opts.start_timestamp or self:time()
 	-- Allow opentracing_span.new to validate
 
+    local context, extra_tags
 	if child_of ~= nil then
 		context = child_of:child()
 	else
@@ -79,17 +79,21 @@ function tracer_methods:start_span(name, opts)
 		should_sample, extra_tags = self.sampler:sample(name)
 		context = opentracing_span_context.new(nil, nil, nil, should_sample)
 	end
-	local span = opentracing_span.new(self, context, name, start_timestamp)
-	if extra_tags ~= nil then
+
+    local span = opentracing_span.new(self, context, name, start_timestamp)
+
+    if extra_tags ~= nil then
 		for k, v in pairs(extra_tags) do
 			span:set_tag(k, v)
 		end
 	end
-	if tags ~= nil then
+
+    if tags ~= nil then
 		for k, v in pairs(tags) do
 			span:set_tag(k, v)
 		end
 	end
+
 	return span
 end
 
