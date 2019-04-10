@@ -4,8 +4,8 @@ local opentracing_span_context = require("opentracing.span_context")
 
 local tracer_methods = {}
 local tracer_mt = {
-	__name = "opentracing.tracer";
-	__index = tracer_methods;
+	__name = "opentracing.tracer",
+	__index = tracer_methods,
 }
 
 local function is(object)
@@ -13,20 +13,20 @@ local function is(object)
 end
 
 local no_op_reporter = {
-	report = function() end;
+	report = function() end,
 }
 local no_op_sampler = {
-	sample = function() return false end;
+	sample = function() return false end,
 }
 
 -- Make injectors and extractors weakly keyed so that unreferenced formats get dropped
 local injectors_metatable = {
-	__name = "opentracing.tracer.injectors";
-	__mode = "k";
+	__name = "opentracing.tracer.injectors",
+	__mode = "k",
 }
 local extractors_metatable = {
-	__name = "opentracing.tracer.extractors";
-	__mode = "k";
+	__name = "opentracing.tracer.extractors",
+	__mode = "k",
 }
 
 local function new(reporter, sampler)
@@ -37,10 +37,10 @@ local function new(reporter, sampler)
 		sampler = no_op_sampler
 	end
 	return setmetatable({
-		injectors = setmetatable({}, injectors_metatable);
-		extractors = setmetatable({}, extractors_metatable);
-		reporter = reporter;
-		sampler = sampler;
+		injectors = setmetatable({}, injectors_metatable),
+		extractors = setmetatable({}, extractors_metatable),
+		reporter = reporter,
+		sampler = sampler,
 	}, tracer_mt)
 end
 
@@ -92,10 +92,10 @@ function tracer_methods:start_span(name, options)
 	return span
 end
 
--- Spans belonging to this tracer will get timestamps via this method
+-- Spans belonging to this tracer will get timestamps in microseconds via this method
 -- Can be overridden for e.g. testing
 function tracer_methods:time() -- luacheck: ignore 212
-	return clock.realtime()
+	return clock.realtime64() / 1000
 end
 
 function tracer_methods:report(span)
