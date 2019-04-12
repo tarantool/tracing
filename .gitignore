@@ -1,0 +1,8 @@
+/luacov.report.out
+/luacov.stats.out
+/*.rock
+.idea
+.rocks
+*.snap
+*.xlog
+*.vylog
