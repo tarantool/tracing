@@ -1,7 +1,7 @@
 return {
 	deletestats = true,
 	include = {
-		"/opentracing/[^/]+$",
+		"/tracing/[^/]+$",
 	},
 	exclude = {
 	},

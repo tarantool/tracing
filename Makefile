@@ -4,7 +4,8 @@ build:
 
 .PHONY: lint
 lint:
-	luacheck ./opentracing --config=.luacheckrc --no-redefined --no-unused-args
+	luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
+	luacheck ./test --config=.luacheckrc --no-redefined --no-unused-args
 
 TEST_FILES := \
 	$(shell find $(CURDIR)/test -type f -path */resources/* -prune -o -name *.lua -print)

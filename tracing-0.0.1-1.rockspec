@@ -1,5 +1,5 @@
-package = "opentracing"
-version = "0.0.2-0"
+package = "tracing"
+version = "0.0.1-1"
 
 source = {
 	url = "https://gitlab.com/tarantool/enterprise/tracing.git",
@@ -12,16 +12,15 @@ description = {
 
 dependencies = {
 	"lua >= 5.1",
-	"tarantool",
 	"checks >= 3.0.0",
 }
 
 build = {
 	type = "builtin",
 	modules = {
-		["opentracing"] = "opentracing/init.lua",
-		["opentracing.span"] = "opentracing/span.lua",
-		["opentracing.span_context"] = "opentracing/span_context.lua",
-		["opentracing.tracer"] = "opentracing/tracer.lua",
+		["opentracing"] = "tracing/opentracing/init.lua",
+		["opentracing.span"] = "tracing/opentracing/span.lua",
+		["opentracing.span_context"] = "tracing/opentracing/span_context.lua",
+		["opentracing.tracer"] = "tracing/opentracing/tracer.lua",
 	},
 }
