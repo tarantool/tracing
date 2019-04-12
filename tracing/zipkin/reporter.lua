@@ -22,7 +22,7 @@ local function format_span(span)
 		tags[k] = tostring(v)
 	end
 
-    local span_kind  = tags.kind
+    local span_kind  = tags['span.kind']
     tags.kind = nil
 
     local localEndpoint = json.null

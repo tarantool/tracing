@@ -22,6 +22,8 @@ build = {
 		["opentracing.span"] = "tracing/opentracing/span.lua",
 		["opentracing.span_context"] = "tracing/opentracing/span_context.lua",
 		["opentracing.tracer"] = "tracing/opentracing/tracer.lua",
+		["opentracing.extractors.http"] = "tracing/opentracing/extractors/http.lua",
+		["opentracing.injectors.http"] = "tracing/opentracing/injectors/http.lua",
 
 		["zipkin.handler"] = "tracing/zipkin/handler.lua",
 		["zipkin.reporter"] = "tracing/zipkin/reporter.lua",
