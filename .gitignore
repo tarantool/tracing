@@ -3,3 +3,6 @@
 /*.rock
 .idea
 .rocks
+*.snap
+*.xlog
+*.vylog
