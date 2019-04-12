@@ -24,7 +24,7 @@ build = {
 		["opentracing.tracer"] = "tracing/opentracing/tracer.lua",
 
 		["zipkin.handler"] = "tracing/zipkin/handler.lua",
-		["zipkin.report"] = "tracing/zipkin/report.lua",
+		["zipkin.reporter"] = "tracing/zipkin/reporter.lua",
 		["zipkin.tracer"] = "tracing/zipkin/tracer.lua",
 	},
 }

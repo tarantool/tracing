@@ -1,5 +1,6 @@
 .PHONY: build
 build:
+	cd third_party/background && tarantoolctl rocks make && rsync --recursive .rocks/ ../../.rocks
 	tarantoolctl rocks make
 
 .PHONY: lint
