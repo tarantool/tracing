@@ -5,13 +5,9 @@
 
 local checks = require('checks')
 local span_context = require('opentracing.span_context')
+local utils = require('tracing.utils')
 
 local http_extractor = {}
-
-local function url_unescape(str)
-   str = str:gsub("%%(%x%x)", function(x) return string.char(tonumber(x,16)) end)
-   return str
-end
 
 local function extractor(_, headers)
 	checks('?', 'table')
@@ -56,7 +52,7 @@ local function extractor(_, headers)
 	for k, v in pairs(headers) do
 		local baggage_key = k:match("^uberctx%-(.*)$")
 		if baggage_key then
-			baggage[baggage_key] = url_unescape(v)
+			baggage[baggage_key] = utils.url_decode(v)
 		end
 	end
 

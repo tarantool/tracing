@@ -6,6 +6,7 @@ local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
 local opentracing = require('opentracing')
 local http_injector = require('opentracing.injectors.http')
+local utils = require('tracing.utils')
 
 local app = {}
 
@@ -35,7 +36,8 @@ local function format_string(ctx, str)
 
     -- Simulate problems with network
     fiber.sleep(1)
-    local resp = httpc:get(formatter_url .. '?helloto=' .. tostring(str), { headers = headers })
+    local resp = httpc:get(formatter_url .. '?helloto=' .. utils.url_encode(str),
+            { headers = headers })
     fiber.sleep(1)
 
     if resp.status ~= 200 then
@@ -65,7 +67,8 @@ local function print_string(ctx, str)
 
     -- Simulate problems with network
     fiber.sleep(1)
-    local resp = httpc:get(printer_url .. '?hello=123', { headers = headers })
+    local resp = httpc:get(printer_url .. '?hello=' .. utils.url_encode(str),
+            { headers = headers })
     fiber.sleep(1)
 
     if resp.status ~= 200 then
