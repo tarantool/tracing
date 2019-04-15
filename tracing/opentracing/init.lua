@@ -1,5 +1,4 @@
 local checks = require('checks')
-local span_context = require('opentracing.span_context')
 local span = require('opentracing.span')
 
 local opentracing = {

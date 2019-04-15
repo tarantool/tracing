@@ -78,8 +78,6 @@ function reporter_mt.send_traces(reporter, traces)
         return
     end
 
-    print(data)
-
     local result = client:request(reporter.api_method, reporter.base_url, data)
     if 200 > result.status or result.status >= 300 then
         log.error('Handler http request error: %s [%s] (%s)',
