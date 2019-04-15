@@ -1,5 +1,7 @@
 local fun = require('fun')
+local log = require('log')
 local json = require('json')
+local httpc = require('http.client')
 
 local Reporter = {}
 
@@ -23,7 +25,7 @@ local function format_span(span)
 	end
 
     local span_kind  = tags['span.kind']
-    tags.kind = nil
+    tags['span.kind'] = nil
 
     local localEndpoint = json.null
 	local serviceName = tags["peer.service"]
@@ -56,7 +58,8 @@ local function format_span(span)
         timestamp = span.timestamp,
         duration = span.duration,
         debug = span:get_baggage_item('debug'),
-        shared = true,
+        -- TODO: set if there is remote call
+        shared = false,
         localEndpoint = localEndpoint,
         remoteEndpoint = remoteEndpoint,
         annotations = span.logs,
@@ -67,12 +70,35 @@ end
 local reporter_mt = {}
 reporter_mt.__index = reporter_mt
 
+function reporter_mt.send_traces(reporter, traces)
+    local client = httpc.new()
+    local ok, data = pcall(json.encode, traces)
+    if not ok then
+        log.error('Handler error: %s', data)
+        return
+    end
+
+    print(data)
+
+    local result = client:request(reporter.api_method, reporter.base_url, data)
+    if 200 > result.status or result.status >= 300 then
+        log.error('Handler http request error: %s [%s] (%s)',
+                result.reason, result.status, result.body)
+    else
+        log.info('Report %d spans to zipkin [%s]', #traces, result.status)
+    end
+end
+
 -- Should we persist it?
-function reporter_mt:report(span)
+local function background_report(self, span)
     table.insert(self.spans, span)
 end
 
--- Should we clear spans after successful request to zipkin?
+local function cli_report(self, span)
+    self:send_traces({format_span(span)})
+end
+
+-- Should we clear spans after unsuccessful request to zipkin?
 function reporter_mt:flush()
     local spans = self.spans
     self.spans = {}
@@ -86,6 +112,13 @@ function Reporter.new(config)
         api_method = config.api_method,
         report_interval = config.report_interval,
     }
+
+    if self.report_interval > 0 then
+        self.report = background_report
+    else
+        self.report = cli_report
+    end
+
     return setmetatable(self, reporter_mt)
 end
 

@@ -10,9 +10,14 @@ function Tracer.new(config, sampler)
     checks({ base_url = 'string',
              api_method = 'string',
              report_interval = 'number' }, '?table')
+
     local reporter = Reporter.new(config)
     local self = OpenTracingTracer.new(reporter, sampler)
-    Handler.start(self)
+
+    if config.report_interval > 0 then
+        Handler.start(self)
+    end
+
     return self
 end
 

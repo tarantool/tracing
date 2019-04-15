@@ -16,7 +16,7 @@ local Sampler = {
 local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
-    report_interval = 1,
+    report_interval = 0,
 }, Sampler)
 tracer:register_injector('http', http_injector)
 
@@ -36,6 +36,7 @@ local function format_string(ctx, str)
     -- Simulate problems with network
     fiber.sleep(1)
     local resp = httpc:get(formatter_url .. '?helloto=' .. tostring(str), { headers = headers })
+    fiber.sleep(1)
 
     if resp.status ~= 200 then
         error('Format string error: ' .. json.encode(resp))
@@ -65,6 +66,7 @@ local function print_string(ctx, str)
     -- Simulate problems with network
     fiber.sleep(1)
     local resp = httpc:get(printer_url .. '?hello=123', { headers = headers })
+    fiber.sleep(1)
 
     if resp.status ~= 200 then
         error('Print string error: ' .. json.encode(resp))
@@ -85,9 +87,6 @@ function app.init()
     local formatted_string = format_string(ctx, hello_to)
     print_string(ctx, formatted_string)
     span:finish()
-
-    -- TODO: dump data when time = 0
-    fiber.sleep(5)
 end
 
 app.init()
