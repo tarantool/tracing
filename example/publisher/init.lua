@@ -1,9 +1,10 @@
 #!/usr/bin/env tarantool
 
 local http_server = require('http.server')
+local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
 local http_extractor = require('opentracing.extractors.http')
-local opentracing_span = require('opentracing.span')
+local opentracing = require('opentracing')
 
 local app = {}
 
@@ -30,12 +31,17 @@ local function handler(req)
     end
 
     local hello = req:query_param('hello')
-    local span = opentracing_span.new(tracer, ctx, 'print_string')
+    local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
     span:set_tag('span.kind', 'server')
+
+    -- Simulate long request processing
+    fiber.sleep(3)
+
     io.write(hello, '\n')
     local resp = req:render({text = '' })
-    span:finish()
     resp.status = 200
+
+    span:finish()
     return resp
 end
 

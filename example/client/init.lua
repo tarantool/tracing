@@ -2,8 +2,9 @@
 
 local http_client = require('http.client')
 local json = require('json')
+local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
-local opentracing_span = require('opentracing.span')
+local opentracing = require('opentracing')
 local http_injector = require('opentracing.injectors.http')
 
 local app = {}
@@ -21,7 +22,7 @@ tracer:register_injector('http', http_injector)
 
 local formatter_url = 'http://localhost:33302/format'
 local function format_string(ctx, str)
-    local span = opentracing_span.new(tracer, ctx, 'format_string')
+    local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
     local httpc = http_client.new()
     span:set_tag('span.kind', 'client')
     span:set_tag('http.method', 'GET')
@@ -31,6 +32,9 @@ local function format_string(ctx, str)
         ['content-type'] = 'application/json'
     }
     tracer:inject(span:context(), 'http', headers)
+
+    -- Simulate problems with network
+    fiber.sleep(1)
     local resp = httpc:get(formatter_url .. '?helloto=' .. tostring(str), { headers = headers })
 
     if resp.status ~= 200 then
@@ -47,7 +51,7 @@ end
 
 local printer_url = 'http://localhost:33303/print'
 local function print_string(ctx, str)
-    local span = opentracing_span.new(tracer, ctx, 'print_string')
+    local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
     local httpc = http_client.new()
     span:set_tag('span.kind', 'client')
     span:set_tag('http.method', 'GET')
@@ -57,6 +61,9 @@ local function print_string(ctx, str)
         ['content-type'] = 'application/json'
     }
     tracer:inject(span:context(), 'http', headers)
+
+    -- Simulate problems with network
+    fiber.sleep(1)
     local resp = httpc:get(printer_url .. '?hello=123', { headers = headers })
 
     if resp.status ~= 200 then
@@ -70,6 +77,7 @@ function app.init()
 
     local hello_to = 'world'
     local greeting = 'my greeting'
+    span:set_tag('span.kind', 'client')
     span:set_tag('hello-to', hello_to)
     span:set_baggage_item('greeting', greeting)
 
@@ -77,8 +85,9 @@ function app.init()
     local formatted_string = format_string(ctx, hello_to)
     print_string(ctx, formatted_string)
     span:finish()
+
     -- TODO: dump data when time = 0
-    require('fiber').sleep(5)
+    fiber.sleep(5)
 end
 
 app.init()

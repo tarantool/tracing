@@ -1,5 +1,6 @@
 .PHONY: build
 build:
+	rm -rf .rocks
 	cd third_party/background && tarantoolctl rocks make && rsync --recursive .rocks/ ../../.rocks
 	tarantoolctl rocks make
 
