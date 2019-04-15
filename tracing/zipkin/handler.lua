@@ -19,6 +19,7 @@ function Handler.start(tracer)
 end
 
 function Handler.stop()
+    log.info('Stop Zipkin handler')
     background.stop('zipkin_handler')
 end
 
