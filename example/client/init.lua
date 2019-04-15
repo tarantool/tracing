@@ -10,17 +10,21 @@ local utils = require('tracing.utils')
 
 local app = {}
 
+-- Process all requests
 local Sampler = {
     sample = function() return true end,
 }
 
+-- Initialize Zipkin tracer
 local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
     report_interval = 0,
 }, Sampler)
+-- Register http injector
 tracer:register_injector('http', http_injector)
 
+-- Client part to formatter
 local formatter_url = 'http://localhost:33302/format'
 local function format_string(ctx, str)
     local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
@@ -29,6 +33,7 @@ local function format_string(ctx, str)
     span:set_tag('http.method', 'GET')
     span:set_tag('http.url', formatter_url)
 
+    -- Use http headers as carrier
     local headers = {
         ['content-type'] = 'application/json'
     }
@@ -44,6 +49,7 @@ local function format_string(ctx, str)
         error('Format string error: ' .. json.encode(resp))
     end
     local result = resp.body
+    -- Log result
     span:log_kv({
         event = 'String format',
         value = result
@@ -52,6 +58,7 @@ local function format_string(ctx, str)
     return result
 end
 
+-- Client part to publisher
 local printer_url = 'http://localhost:33303/print'
 local function print_string(ctx, str)
     local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
@@ -78,12 +85,16 @@ local function print_string(ctx, str)
 end
 
 function app.init()
+    -- Initialize main span
     local span = tracer:start_span('Hello-world')
 
     local hello_to = 'world'
     local greeting = 'my greeting'
+    -- Set service type
     span:set_tag('span.kind', 'client')
+    -- Set tag with metadata
     span:set_tag('hello-to', hello_to)
+    -- Add data to baggage
     span:set_baggage_item('greeting', greeting)
 
     local ctx = span:context()
