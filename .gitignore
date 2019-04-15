@@ -6,3 +6,4 @@
 *.snap
 *.xlog
 *.vylog
+/doc

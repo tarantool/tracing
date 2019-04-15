@@ -1,3 +1,4 @@
+-- @module zipkin
 local checks = require('checks')
 
 local Reporter = require('zipkin.reporter')

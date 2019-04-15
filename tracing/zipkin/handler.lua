@@ -1,3 +1,4 @@
+-- @module zipkin
 local log = require('log')
 local background = require('background.looper')
 

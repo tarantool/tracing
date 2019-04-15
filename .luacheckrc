@@ -4,8 +4,8 @@ std = {
         'table', 'pairs', 'os', 'io', 'select', 'unpack', 'dofile', 'next',
         'loadstring', 'setfenv', 'utf8',
         'rawget', 'rawset',
-        'getmetatable', 'setmetatable', 'SCRIPT_PATH'
+        'getmetatable', 'setmetatable',
     },
-    globals = {'process_request', 'package', 'box'}
+    globals = {'package', 'box'}
 }
 redefined = False
