@@ -29,3 +29,5 @@ local function dummy_span_reporter()
 end
 
 dummy_span_reporter()
+
+os.exit(0)
