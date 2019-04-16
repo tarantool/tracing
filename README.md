@@ -14,3 +14,6 @@ Tracing module for tarantool includes following parts:
 ### Details
 For details about each module open README.md in a directory of needed module  
 (`/tracing/opentracing` or `/tracing/zipkin`)
+
+### Documentation
+To generate documentation install `ldoc` and run `ldoc .`.
