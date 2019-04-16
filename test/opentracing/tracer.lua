@@ -3,18 +3,10 @@
 local tap = require('tap')
 local test = tap.test('opentracing.tracer')
 
-test:plan(15)
+test:plan(13)
 local opentracing_span_context = require("opentracing.span_context")
 local opentracing_tracer = require("opentracing.tracer")
 local new_tracer = opentracing_tracer.new
-
-test:test("has working .is function", function(test)
-    test:plan(3)
-    test:ok(not opentracing_tracer.is(nil))
-    test:ok(not opentracing_tracer.is({}))
-    local tracer = new_tracer()
-    test:ok(opentracing_tracer.is(tracer))
-end)
 
 test:test("doesn't allow constructing span without a name", function(test)
     test:plan(1)
@@ -105,14 +97,6 @@ test:test("allows passing span as a child_of", function(test)
     })
 end)
 
-test:test("allows passing span context as a child_of", function(test)
-    local tracer = new_tracer()
-    local span1 = tracer:start_span("foo")
-    tracer:start_span("bar", {
-        child_of = span1:context()
-    })
-end)
-
 test:test("doesn't allow invalid child_of", function(test)
     test:plan(1)
     local tracer = new_tracer()
@@ -172,7 +156,7 @@ test:test("works with custom injector", function(test)
     test:is_deeply(carrier, injector_arg_carrier)
 end)
 
-test:test(":inject takes span", function(test)
+test:test(":inject takes context", function(test)
     test:plan(2)
     local tracer = new_tracer()
     local injector_arg_ctx, injector_arg_carrier
@@ -184,7 +168,7 @@ test:test(":inject takes span", function(test)
     local span = tracer:start_span("foo")
     local context = span:context()
     local carrier = {}
-    tracer:inject(span, "my_type", carrier)
+    tracer:inject(span:context(), "my_type", carrier)
     test:is_deeply(context, injector_arg_ctx)
     test:is_deeply(carrier, injector_arg_carrier)
 end)

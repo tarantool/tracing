@@ -3,21 +3,11 @@
 local tap = require('tap')
 local test = tap.test('opentracing.span')
 
-test:plan(21)
+test:plan(20)
 local tracer = require("opentracing.tracer").new()
 local context = require("opentracing.span_context").new()
 local opentracing_span = require("opentracing.span")
 local new_span = opentracing_span.new
-
-test:test("has working .is function", function(test)
-    test:plan(5)
-    test:ok(not opentracing_span.is(nil))
-    test:ok(not opentracing_span.is({}))
-    local span = new_span(tracer, context, "foo", 0)
-    test:ok(opentracing_span.is(span))
-    test:ok(not opentracing_span.is(tracer))
-    test:ok(not opentracing_span.is(context))
-end)
 
 test:test("doesn't allow constructing without a tracer", function(test)
     test:plan(1)

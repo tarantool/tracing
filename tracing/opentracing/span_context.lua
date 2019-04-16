@@ -30,10 +30,6 @@ local span_context_mt = {
     __index = span_context_methods,
 }
 
-local function is(object)
-    return getmetatable(object) == span_context_mt
-end
-
 local baggage_mt = {
     __name = 'opentracing.span_context.baggage',
     __newindex = function()
@@ -126,5 +122,4 @@ end
 
 return {
     new = new,
-    is = is,
 }

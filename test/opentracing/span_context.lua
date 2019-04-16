@@ -4,17 +4,9 @@ local tap = require('tap')
 
 local test = tap.test('opentracing.span_context')
 
-test:plan(5)
+test:plan(4)
 local opentracing_span_context = require("opentracing.span_context")
 local new_context = opentracing_span_context.new
-
-test:test("has working .is function", function(test)
-    test:plan(3)
-    test:ok(not opentracing_span_context.is(nil))
-    test:ok(not opentracing_span_context.is({}))
-    local context = new_context()
-    test:ok(opentracing_span_context.is(context))
-end)
 
 test:test("doesn't allow constructing with invalid trace id", function(test)
     test:plan(1)

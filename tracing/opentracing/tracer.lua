@@ -17,10 +17,6 @@ local tracer_mt = {
     __index = tracer_methods,
 }
 
-local function is(object)
-    return getmetatable(object) == tracer_mt
-end
-
 local no_op_reporter = {
     report = function() end,
 }
@@ -100,11 +96,7 @@ function tracer_methods:start_span(name, opts)
 
     if child_of ~= nil then
         assert(references == nil, "cannot specify both references and child_of")
-        if opentracing_span.is(child_of) then
-            child_of = child_of:context()
-        else
-            assert(opentracing_span_context.is(child_of), "child_of should be a span or span context")
-        end
+        child_of = child_of:context()
     end
     if references ~= nil then
         error("references NYI")
@@ -188,11 +180,6 @@ end
 --- @treturn[2] string error
 function tracer_methods:inject(context, format, carrier)
     checks('table', 'table', 'string', '?')
-    if opentracing_span.is(context) then
-        context = context:context()
-    else
-        assert(opentracing_span_context.is(context), "context should be a span or span context")
-    end
     local injector = self.injectors[format]
     if injector == nil then
         return nil, "Unknown format: " .. format
@@ -220,5 +207,4 @@ end
 
 return {
     new = new,
-    is = is,
 }

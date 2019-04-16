@@ -21,10 +21,6 @@ local span_mt = {
     __index = span_methods,
 }
 
-local function is(object)
-    return getmetatable(object) == span_mt
-end
-
 --- Create new span
 --- @function new
 --- @tparam table tracer
@@ -290,5 +286,4 @@ end
 
 return {
     new = new,
-    is = is,
 }
