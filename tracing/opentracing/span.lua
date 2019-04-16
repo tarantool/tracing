@@ -55,7 +55,6 @@ function span_methods:context()
     return self.ctx
 end
 
-
 --- Provides access to the @class `Tracer` that created this span.
 --- @function tracer
 --- @tparam table self

@@ -1,4 +1,4 @@
---- @module opentracing
+-- @module opentracing
 local checks = require('checks')
 local span = require('opentracing.span')
 
