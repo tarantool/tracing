@@ -1,4 +1,4 @@
---- @module zipkin.tracer
+-- @module zipkin.tracer
 local checks = require('checks')
 
 local Reporter = require('zipkin.reporter')

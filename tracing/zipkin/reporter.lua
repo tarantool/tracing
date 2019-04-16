@@ -7,10 +7,10 @@ local httpc = require('http.client')
 local Reporter = {}
 
 local span_kind_map = {
-	client = "CLIENT";
-	server = "SERVER";
-	producer = "PRODUCER";
-	consumer = "CONSUMER";
+    client = "CLIENT";
+    server = "SERVER";
+    producer = "PRODUCER";
+    consumer = "CONSUMER";
 }
 
 local function format_span(span)
@@ -18,37 +18,37 @@ local function format_span(span)
     local tags = {}
 
     -- TODO: export tags as strings
-	for k, v in span:each_tag() do
-		-- Zipkin tag values should be strings
-		-- see https://zipkin.io/zipkin-api/#/default/post_spans
-		-- and https://github.com/Kong/kong-plugin-zipkin/pull/13#issuecomment-402389342
-		tags[k] = tostring(v)
-	end
+    for k, v in span:each_tag() do
+        -- Zipkin tag values should be strings
+        -- see https://zipkin.io/zipkin-api/#/default/post_spans
+        -- and https://github.com/Kong/kong-plugin-zipkin/pull/13#issuecomment-402389342
+        tags[k] = tostring(v)
+    end
 
     local span_kind  = tags['span.kind']
     tags['span.kind'] = nil
 
     local localEndpoint = json.null
-	local serviceName = tags["peer.service"]
-	if serviceName ~= nil then
-		tags["peer.service"] = nil
-		localEndpoint = {
-			serviceName = serviceName,
-		}
-	end
+    local serviceName = tags["peer.service"]
+    if serviceName ~= nil then
+        tags["peer.service"] = nil
+        localEndpoint = {
+            serviceName = serviceName,
+        }
+    end
 
     local remoteEndpoint = json.null
-	local peer_port = span:get_tag("peer.port") -- get as number
-	if peer_port ~= nil then
-		tags["peer.port"] = nil
-		remoteEndpoint = {
-			ipv4 = tags["peer.ipv4"],
-			ipv6 = tags["peer.ipv6"],
-			port = peer_port; -- port is *not* optional
-		}
-		tags["peer.ipv4"] = nil
-		tags["peer.ipv6"] = nil
-	end
+    local peer_port = span:get_tag("peer.port") -- get as number
+    if peer_port ~= nil then
+        tags["peer.port"] = nil
+        remoteEndpoint = {
+            ipv4 = tags["peer.ipv4"],
+            ipv6 = tags["peer.ipv6"],
+            port = peer_port; -- port is *not* optional
+        }
+        tags["peer.ipv4"] = nil
+        tags["peer.ipv6"] = nil
+    end
 
     return {
         traceId = string.hex(ctx.trace_id),

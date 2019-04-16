@@ -18,7 +18,7 @@ local err_string_arg = "bad argument #%d to '%s' (%s expected, got %s)"
 -- See https://curl.haxx.se/libcurl/c/curl_easy_escape.html
 -- @function url_encode
 -- @string       inp    the string
--- @returns             result string or nil
+-- @returns      result string or nil
 function utils.url_encode(inp)
     if type(inp) ~= 'string' then
         error(err_string_arg:format(1, "string.url_encode", 'string', type(inp)), 2)
@@ -41,7 +41,7 @@ end
 -- See https://curl.haxx.se/libcurl/c/curl_easy_unescape.html
 -- @function url_decode
 -- @string       inp    the string
--- @returns             result string or nil
+-- @returns      result string or nil
 function utils.url_decode(inp)
     if type(inp) ~= 'string' then
         error(err_string_arg:format(1, "string.url_decode", 'string', type(inp)), 2)

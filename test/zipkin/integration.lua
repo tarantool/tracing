@@ -56,7 +56,7 @@ test:test('Background reporter', function(test)
     test:ok(span:finish(), 'Successfully finish span. Background report')
     fiber.sleep(1)
     ZipkinHandler.stop()
-    test:ok(check_trace_id(span.context_.trace_id), 'Trace was correctly saved')
+    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
 end)
 
 test:test('CLI-reporter', function(test)
@@ -74,7 +74,7 @@ test:test('CLI-reporter', function(test)
         }
     })
     test:ok(span:finish(), 'Successfully finish span. Client report')
-    test:ok(check_trace_id(span.context_.trace_id), 'Trace was correctly saved')
+    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
 end)
 
 os.exit(test:check() and 0 or 1)
