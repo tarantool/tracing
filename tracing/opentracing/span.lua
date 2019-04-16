@@ -31,8 +31,8 @@ local span_mt = {
 local function new(tracer, context, name, start_timestamp)
     checks('table', 'table', 'string', '?number|cdata')
     return setmetatable({
-        tracer_ = tracer,
-        context_ = context,
+        tracer = tracer,
+        ctx = context,
         name = name,
         timestamp = start_timestamp or tracer:time(),
         duration = nil,
@@ -52,16 +52,16 @@ end
 --- @treturn table context
 function span_methods:context()
     checks('table')
-    return self.context_
+    return self.ctx
 end
 
 --- Provides access to the @class `Tracer` that created this span.
 --- @function tracer
 --- @tparam table self
 --- @treturn table tracer the @class `Tracer` that created this span.
-function span_methods:tracer()
+function span_methods:get_tracer()
     checks('table')
-    return self.tracer_
+    return self.tracer
 end
 
 --- Changes the operation name
@@ -82,7 +82,7 @@ end
 --- @treturn table child span
 function span_methods:start_child_span(name, start_timestamp)
     checks('table', 'string', '?number|cdata')
-    return self.tracer_:start_span(name, {
+    return self.tracer:start_span(name, {
         start_timestamp = start_timestamp,
         child_of = self,
     })
@@ -106,15 +106,15 @@ function span_methods:finish(finish_timestamp)
         return false, 'span already finished'
     end
     if finish_timestamp == nil then
-        self.duration = self.tracer_:time() - self.timestamp
+        self.duration = self.tracer:time() - self.timestamp
     else
         self.duration = finish_timestamp - self.timestamp
         if self.duration < 0 then
             return nil, 'Span duration can not be negative'
         end
     end
-    if self.context_.should_sample then
-        self.tracer_:report(self)
+    if self.ctx.should_sample then
+        self.tracer:report(self)
     end
     return true
 end
@@ -181,7 +181,7 @@ end
 function span_methods:log(key, value, timestamp)
     -- `value` is allowed to be anything.
     checks('table', 'string', '?', '?number|cdata')
-    timestamp = timestamp or self.tracer_:time()
+    timestamp = timestamp or self.tracer:time()
     table.insert(self.logs, {
         key = key,
         value = value,
@@ -207,7 +207,7 @@ end
 --- @treturn boolean `true`
 function span_methods:log_kv(key_values, timestamp)
     checks('table', 'table', '?number|cdata')
-    timestamp = timestamp or self.tracer_:time()
+    timestamp = timestamp or self.tracer:time()
 
     for key, value in pairs(key_values) do
         table.insert(self.logs, {
@@ -257,7 +257,7 @@ end
 function span_methods:set_baggage_item(key, value)
     checks('table', 'string', 'string')
     -- Create new context so that baggage is immutably passed around
-    self.context_ = self.context_:clone_with_baggage_item(key, value)
+    self.ctx = self.ctx:clone_with_baggage_item(key, value)
     return true
 end
 
@@ -268,7 +268,7 @@ end
 --- @treturn string value
 function span_methods:get_baggage_item(key)
     checks('table', 'string')
-    return self.context_:get_baggage_item(key)
+    return self.ctx:get_baggage_item(key)
 end
 
 --- Returns an iterator over each attached baggage item
@@ -278,7 +278,7 @@ end
 --- @treturn table baggage
 function span_methods:each_baggage_item()
     checks('table')
-    return self.context_:each_baggage_item()
+    return self.ctx:each_baggage_item()
 end
 
 return {

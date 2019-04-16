@@ -65,10 +65,10 @@ test:test("can retreive context with :context()", function(test)
     test:is_deeply(context, span:context())
 end)
 
-test:test("can retreive tracer with :tracer()", function(test)
+test:test("can retreive tracer with :get_tracer()", function(test)
     test:plan(1)
     local span = new_span(tracer, context, "foo", 0)
-    test:is_deeply(tracer, span:tracer())
+    test:is_deeply(tracer, span:get_tracer())
 end)
 
 test:test("can change name with :set_operation_name", function(test)

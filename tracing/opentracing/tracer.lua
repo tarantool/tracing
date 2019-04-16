@@ -99,7 +99,7 @@ function tracer_methods:start_span(name, opts)
         child_of = child_of:context()
     end
     if references ~= nil then
-        error("references NYI")
+        error("It seems references is used, but it is not supported. Use child_of instead")
     end
 
     local tags = opts.tags
@@ -136,7 +136,7 @@ end
 -- Can be overridden for e.g. testing
 function tracer_methods:time() -- luacheck: ignore 212
     checks('table')
-    return clock.realtime64() / 1000
+    return clock.monotonic64() / 1000
 end
 
 function tracer_methods:report(span)

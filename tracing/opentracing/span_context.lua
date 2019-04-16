@@ -11,12 +11,13 @@
 --  span_id, sampled)`` tuple).
 
 local digest = require('digest')
+local uuid = require('uuid')
 local checks = require('checks')
 
 -- TODO: choose length of trace_id and span_id depends on options if we plan to support another tracing systems
 -- For zipkin compat, use 128 bit trace ids
 local function generate_trace_id()
-    return digest.urandom(16)
+    return uuid.bin()
 end
 
 -- For zipkin compat, use 64 bit span ids
