@@ -40,7 +40,6 @@ local function new(tracer, context, name, start_timestamp)
         baggage = {},
         tags = {},
         logs = {},
-        n_logs = 0,
     }, span_mt)
 end
 
@@ -109,9 +108,10 @@ function span_methods:finish(finish_timestamp)
     if finish_timestamp == nil then
         self.duration = self.tracer_:time() - self.timestamp
     else
-        local duration = finish_timestamp - self.timestamp
-        -- TODO: May be log the fact then duration is negative
-        self.duration = duration >= 0 and duration or 0
+        self.duration = finish_timestamp - self.timestamp
+        if self.duration < 0 then
+            return nil, 'Span duration can not be negative'
+        end
     end
     if self.context_.should_sample then
         self.tracer_:report(self)
@@ -156,7 +156,9 @@ end
 function span_methods:each_tag()
     checks('table')
     local tags = self.tags
-    if tags == nil then return function() end end
+    if tags == nil then
+        return function() end
+    end
     return next, tags
 end
 
@@ -180,15 +182,11 @@ function span_methods:log(key, value, timestamp)
     -- `value` is allowed to be anything.
     checks('table', 'string', '?', '?number|cdata')
     timestamp = timestamp or self.tracer_:time()
-
-    local log = {
+    table.insert(self.logs, {
         key = key,
         value = value,
         timestamp = timestamp,
-    }
-
-    self.logs[self.n_logs + 1] = log
-    self.n_logs = self.n_logs + 1
+    })
     return true
 end
 
@@ -212,12 +210,11 @@ function span_methods:log_kv(key_values, timestamp)
     timestamp = timestamp or self.tracer_:time()
 
     for key, value in pairs(key_values) do
-        self.n_logs = self.n_logs + 1
-        self.logs[self.n_logs] = {
+        table.insert(self.logs, {
             key = key,
             value = value,
             timestamp = timestamp,
-        }
+        })
     end
 
     return true
@@ -232,7 +229,7 @@ function span_methods:each_log()
     checks('table')
     local i = 0
     return function(logs)
-        if i >= self.n_logs then
+        if i >= #self.logs then
             return
         end
         i = i + 1
