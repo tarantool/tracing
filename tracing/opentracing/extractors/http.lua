@@ -7,10 +7,8 @@ local checks = require('checks')
 local span_context = require('opentracing.span_context')
 local utils = require('tracing.utils')
 
-local http_extractor = {}
-
-local function extractor(_, headers)
-    checks('?', 'table')
+local function extract(headers)
+    checks('table')
     -- X-B3-Sampled: if an upstream decided to sample this request, we do too.
     local sample = headers["x-b3-sampled"]
     if sample == "1" or sample == "true" then
@@ -63,8 +61,4 @@ local function extractor(_, headers)
     return span_context.new(trace_id, request_span_id, parent_span_id, sample, baggage)
 end
 
-setmetatable(http_extractor, {
-    __call = extractor,
-})
-
-return http_extractor
+return extract

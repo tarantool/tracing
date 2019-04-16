@@ -5,10 +5,8 @@
 local checks = require('checks')
 local utils = require('tracing.utils')
 
-local http_injector = {}
-
-local function inject(_, context, headers)
-    checks('?', 'table', '?table')
+local function inject(context, headers)
+    checks('table', '?table')
     headers = headers or {}
     headers["x-b3-traceid"] = context.trace_id and string.hex(context.trace_id)
     headers["x-b3-parentspanid"] = context.parent_id and string.hex(context.parent_id) or nil
@@ -18,10 +16,7 @@ local function inject(_, context, headers)
         -- XXX: https://github.com/opentracing/specification/issues/117
         headers["uberctx-" .. key] = utils.url_encode(value)
     end
+    return headers
 end
 
-setmetatable(http_injector, {
-    __call = inject,
-})
-
-return http_injector
+return inject
