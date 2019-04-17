@@ -22,3 +22,7 @@ unit:
 		[ $$TEST_RESULT -gt 0 ] && exit $$TEST_RESULT; \
 	done; \
 	exit $$TEST_RESULT
+
+.PHONY: doc
+doc:
+	ldoc .
