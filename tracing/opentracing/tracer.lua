@@ -137,7 +137,7 @@ end
 -- Can be overridden for e.g. testing
 function tracer_methods:time() -- luacheck: ignore 212
     checks('table')
-    return clock.monotonic64() / 1000
+    return clock.realtime64() / 1000
 end
 
 function tracer_methods:report(span)
