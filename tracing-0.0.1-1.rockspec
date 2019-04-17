@@ -23,8 +23,12 @@ build = {
 		["opentracing.span"] = "tracing/opentracing/span.lua",
 		["opentracing.span_context"] = "tracing/opentracing/span_context.lua",
 		["opentracing.tracer"] = "tracing/opentracing/tracer.lua",
+		["opentracing.extractors"] = "tracing/opentracing/extractors/init.lua",
 		["opentracing.extractors.http"] = "tracing/opentracing/extractors/http.lua",
+		["opentracing.extractors.map"] = "tracing/opentracing/extractors/map.lua",
+		["opentracing.injectors"] = "tracing/opentracing/injectors/init.lua",
 		["opentracing.injectors.http"] = "tracing/opentracing/injectors/http.lua",
+		["opentracing.injectors.map"] = "tracing/opentracing/injectors/map.lua",
 
 		["zipkin.handler"] = "tracing/zipkin/handler.lua",
 		["zipkin.reporter"] = "tracing/zipkin/reporter.lua",
