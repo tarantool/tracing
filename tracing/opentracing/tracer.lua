@@ -10,6 +10,8 @@ local clock = require("clock")
 local checks = require("checks")
 local opentracing_span = require("opentracing.span")
 local opentracing_span_context = require("opentracing.span_context")
+local injectors = require('opentracing.injectors')
+local extractors = require('opentracing.extractors')
 
 local tracer_methods = {}
 local tracer_mt = {
@@ -203,6 +205,66 @@ function tracer_methods:extract(format, carrier)
         return nil, "Unknown format: " .. format
     end
     return extractor(carrier)
+end
+
+--- Injects `span_context` into `carrier` using a format appropriate for HTTP
+-- headers.
+-- Example usage:
+--
+--    carrier = {}
+--    tracer:http_headers_inject(span:context(), carrier)
+--
+--- @function http_headers_inject
+--- @tparam table self
+--- @tparam table context the @class `SpanContext` instance to inject
+--- @tparam table carrier
+--- @treturn table context a table to contain the span context
+function tracer_methods:http_headers_inject(context, carrier)
+    return injectors.http(context, carrier)
+end
+
+--- Injects `span_context` into `carrier`.
+--
+-- Example usage:
+--
+--    carrier = {}
+--    tracer:text_map_inject(span:context(), carrier)
+--
+--- @function text_map_inject
+--- @tparam table self
+--- @tparam table context the @class `SpanContext` instance to inject
+--- @tparam table carrier
+--- @treturn table context a table to contain the span context
+function tracer_methods:text_map_inject(context, carrier)
+    return injectors.map(context, carrier)
+end
+
+--- Returns a @class `SpanContext` instance extracted from the `carrier` or
+-- `nil` if no such @class `SpanContext` could be found. `http_headers_extract`
+-- expects a format appropriate for HTTP headers and uses case-sensitive
+-- comparisons for the keys.
+--
+--- @function http_headers_extract
+--- @tparam table self
+--- @tparam table carrier the format-specific carrier object to extract from
+--- @treturn[1] table context
+--- @treturn[2] nil
+--- @treturn[2] string error
+function tracer_methods:http_headers_extract(carrier)
+  return extractors.http(carrier)
+end
+
+--- Returns a @class `SpanContext` instance extracted from the `carrier` or
+-- `nil` if no such @class `SpanContext` could be found.
+--
+--- @function text_map_extract
+--- @tparam table self
+--- @tparam table carrier the format-specific carrier object to extract from
+--- @treturn[1] table context
+--- @treturn[2] nil
+--- @treturn[2] string error
+function tracer_methods:text_map_extract(carrier)
+  return extractors.map(carrier)
 end
 
 return {
