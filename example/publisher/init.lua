@@ -4,7 +4,6 @@ local http_server = require('http.server')
 local fiber = require('fiber')
 local log = require('log')
 local zipkin = require('zipkin.tracer')
-local http_extractor = require('opentracing.extractors.http')
 local opentracing = require('opentracing')
 
 local app = {}
@@ -24,7 +23,7 @@ local tracer = zipkin.new({
 }, Sampler)
 
 local function handler(req)
-    local ctx, err = http_extractor(req.headers)
+    local ctx, err = tracer:http_headers_extract(req.headers)
 
     if ctx == nil then
         local resp = req:render({ text = err })

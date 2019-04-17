@@ -6,7 +6,6 @@ local log = require('log')
 local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
 local opentracing = require('opentracing')
-local http_injector = require('opentracing.injectors.http')
 local utils = require('tracing.utils')
 
 local app = {}
@@ -23,8 +22,6 @@ local tracer = zipkin.new({
     report_interval = 0,
     on_error = function(err) log.error(err.msg) end,
 }, Sampler)
--- Register http injector
-tracer:register_injector('http', http_injector)
 
 -- Client part to formatter
 local formatter_url = 'http://localhost:33302/format'
@@ -40,7 +37,7 @@ local function format_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    tracer:inject(span:context(), 'http', headers)
+    tracer:http_headers_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)
@@ -75,7 +72,7 @@ local function print_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    tracer:inject(span:context(), 'http', headers)
+    tracer:http_headers_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)
