@@ -5,10 +5,22 @@
 
 local checks = require('checks')
 local span_context = require('opentracing.span_context')
+local carrier_validate = require('opentracing.extractors.validate')
 local utils = require('tracing.utils')
 
 local function extract(headers)
     checks('table')
+
+    local carrier = table.new(0, 3)
+    carrier.trace_id = headers["x-b3-traceid"]
+    carrier.parent_span_id = headers["x-b3-parentspanid"]
+    carrier.span_id = headers["x-b3-spanid"]
+
+    local ok, err = carrier_validate(carrier)
+    if not ok then
+        return nil, err
+    end
+
     -- X-B3-Sampled: if an upstream decided to sample this request, we do too.
     local sample = headers["x-b3-sampled"]
     if sample == "1" or sample == "true" then
@@ -26,25 +38,6 @@ local function extract(headers)
         sample = true
     end
 
-    local trace_id = headers["x-b3-traceid"]
-
-    -- Validate trace id
-    if trace_id == nil or ((#trace_id ~= 16 and #trace_id ~= 32) or trace_id:match("%X")) then
-        return nil, 'Invalid trace id'
-    end
-
-    local parent_span_id = headers["x-b3-parentspanid"]
-    -- Validate parent_span_id
-    if parent_span_id ~= nil and (#parent_span_id ~= 16 or parent_span_id:match("%X")) then
-        return nil, 'Invalid parent span id'
-    end
-
-    local request_span_id = headers["x-b3-spanid"]
-    -- Validate request_span_id
-    if request_span_id ~= nil and (#request_span_id ~= 16 or request_span_id:match("%X")) then
-        return nil, 'Invalid span id'
-    end
-
     -- Process baggage header
     local baggage = {}
     for k, v in pairs(headers) do
@@ -54,11 +47,11 @@ local function extract(headers)
         end
     end
 
-    trace_id = string.fromhex(trace_id)
-    parent_span_id = parent_span_id and string.fromhex(parent_span_id)
-    request_span_id = request_span_id and string.fromhex(request_span_id)
+    local trace_id = string.fromhex(carrier.trace_id)
+    local parent_span_id = carrier.parent_span_id and string.fromhex(carrier.parent_span_id)
+    local span_id = carrier.span_id and string.fromhex(carrier.span_id)
 
-    return span_context.new(trace_id, request_span_id, parent_span_id, sample, baggage)
+    return span_context.new(trace_id, span_id, parent_span_id, sample, baggage)
 end
 
 return extract

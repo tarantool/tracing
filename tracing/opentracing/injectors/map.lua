@@ -6,7 +6,7 @@ local function inject(context, carrier)
     carrier.trace_id = context.trace_id
     carrier.parent_id = context.parent_id
     carrier.span_id = context.span_id
-    carrier.should_sample = context.should_sample
+    carrier.sample = context.should_sample
     local baggage = table.deepcopy(context.baggage)
     carrier.baggage = setmetatable(baggage, nil)
     return carrier

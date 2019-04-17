@@ -26,6 +26,7 @@ build = {
 		["opentracing.extractors"] = "tracing/opentracing/extractors/init.lua",
 		["opentracing.extractors.http"] = "tracing/opentracing/extractors/http.lua",
 		["opentracing.extractors.map"] = "tracing/opentracing/extractors/map.lua",
+		["opentracing.extractors.validate"] = "tracing/opentracing/extractors/validate.lua",
 		["opentracing.injectors"] = "tracing/opentracing/injectors/init.lua",
 		["opentracing.injectors.http"] = "tracing/opentracing/injectors/http.lua",
 		["opentracing.injectors.map"] = "tracing/opentracing/injectors/map.lua",

@@ -17,7 +17,7 @@ local headers = {
     ['uberctx-item'] = 'baggage item'
 }
 
-local result = http_extractor(headers)
+local result, err = http_extractor(headers)
 test:isnt(nil, result, 'Headers are decoded')
 test:is('baggage item', result:get_baggage_item('item'), 'Extract baggage item')
 
