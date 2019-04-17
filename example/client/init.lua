@@ -2,6 +2,7 @@
 
 local http_client = require('http.client')
 local json = require('json')
+local log = require('log')
 local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
 local opentracing = require('opentracing')
@@ -20,6 +21,7 @@ local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
     report_interval = 0,
+    on_error = function(err) log.error(err.msg) end,
 }, Sampler)
 -- Register http injector
 tracer:register_injector('http', http_injector)
@@ -29,6 +31,7 @@ local formatter_url = 'http://localhost:33302/format'
 local function format_string(ctx, str)
     local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
     local httpc = http_client.new()
+    span:set_tag('component', 'client')
     span:set_tag('span.kind', 'client')
     span:set_tag('http.method', 'GET')
     span:set_tag('http.url', formatter_url)
@@ -45,6 +48,7 @@ local function format_string(ctx, str)
             { headers = headers })
     fiber.sleep(1)
 
+    span:set_tag('http.status_code', resp.status)
     if resp.status ~= 200 then
         error('Format string error: ' .. json.encode(resp))
     end
@@ -63,6 +67,7 @@ local printer_url = 'http://localhost:33303/print'
 local function print_string(ctx, str)
     local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
     local httpc = http_client.new()
+    span:set_tag('component', 'client')
     span:set_tag('span.kind', 'client')
     span:set_tag('http.method', 'GET')
     span:set_tag('http.url', printer_url)
@@ -78,6 +83,7 @@ local function print_string(ctx, str)
             { headers = headers })
     fiber.sleep(1)
 
+    span:set_tag('http.status_code', resp.status)
     if resp.status ~= 200 then
         error('Print string error: ' .. json.encode(resp))
     end
@@ -90,6 +96,7 @@ function app.init()
 
     local hello_to = 'world'
     local greeting = 'my greeting'
+    span:set_tag('component', 'client')
     -- Set service type
     span:set_tag('span.kind', 'client')
     -- Set tag with metadata

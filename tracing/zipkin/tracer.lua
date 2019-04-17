@@ -19,7 +19,8 @@ local Tracer = {}
 function Tracer.new(config, sampler)
     checks({ base_url = 'string',
              api_method = 'string',
-             report_interval = 'number' }, '?table')
+             report_interval = 'number',
+             on_error = '?function' }, '?table')
 
     local reporter = Reporter.new(config)
     local self = OpenTracingTracer.new(reporter, sampler)

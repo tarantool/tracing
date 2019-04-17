@@ -2,6 +2,7 @@
 
 local http_server = require('http.server')
 local fiber = require('fiber')
+local log = require('log')
 local zipkin = require('zipkin.tracer')
 local http_extractor = require('opentracing.extractors.http')
 local opentracing = require('opentracing')
@@ -19,6 +20,7 @@ local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
     report_interval = 5,
+    on_error = function(err) log.error(err.msg) end,
 }, Sampler)
 
 local function handler(req)
@@ -32,6 +34,7 @@ local function handler(req)
 
     local hello = req:query_param('hello')
     local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
+    span:set_tag('component', 'publisher')
     span:set_tag('span.kind', 'server')
 
     -- Simulate long request processing

@@ -1,9 +1,13 @@
 local fun = require('fun')
-local log = require('log')
 local json = require('json')
 local httpc = require('http.client')
 
 local Reporter = {}
+
+local error_codes = {
+    http = 1,
+    json_encode = 2,
+}
 
 local span_kind_map = {
     client = "CLIENT";
@@ -28,9 +32,9 @@ local function format_span(span)
     tags['span.kind'] = nil
 
     local localEndpoint = json.null
-    local serviceName = tags["peer.service"]
+    local serviceName = tags["component"]
     if serviceName ~= nil then
-        tags["peer.service"] = nil
+        tags["component"] = nil
         localEndpoint = {
             serviceName = serviceName,
         }
@@ -41,12 +45,14 @@ local function format_span(span)
     if peer_port ~= nil then
         tags["peer.port"] = nil
         remoteEndpoint = {
+            serviceName = tags["peer.service"],
             ipv4 = tags["peer.ipv4"],
             ipv6 = tags["peer.ipv6"],
-            port = peer_port; -- port is *not* optional
+            port = peer_port, -- port is *not* optional
         }
         tags["peer.ipv4"] = nil
         tags["peer.ipv6"] = nil
+        tags["peer.service"] = nil
     end
 
     return {
@@ -70,20 +76,23 @@ end
 local reporter_mt = {}
 reporter_mt.__index = reporter_mt
 
-function reporter_mt.send_traces(reporter, traces)
+function reporter_mt:send_traces(traces)
     local client = httpc.new()
     local ok, data = pcall(json.encode, traces)
     if not ok then
-        log.error('Handler error: %s', data)
+        self.on_error({
+            msg = data,
+            code = error_codes.json_encode,
+        })
         return
     end
 
-    local result = client:request(reporter.api_method, reporter.base_url, data)
+    local result = client:request(self.api_method, self.base_url, data)
     if 200 > result.status or result.status >= 300 then
-        log.error('Handler http request error: %s [%s] (%s)',
-                result.reason, result.status, result.body)
-    else
-        log.info('Report %d spans to zipkin [%s]', #traces, result.status)
+        self.on_error({
+            msg = ('%s [%s] (%s)'):format(result.reason, result.status, result.body),
+            code = error_codes.http,
+        })
     end
 end
 
@@ -109,6 +118,7 @@ function Reporter.new(config)
         base_url = config.base_url,
         api_method = config.api_method,
         report_interval = config.report_interval,
+        on_error = config.on_error or function() end
     }
 
     if self.report_interval > 0 then

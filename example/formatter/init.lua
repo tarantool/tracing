@@ -2,6 +2,7 @@
 
 local http_server = require('http.server')
 local fiber = require('fiber')
+local log = require('log')
 local zipkin = require('zipkin.tracer')
 local http_extractor = require('opentracing.extractors.http')
 local opentracing = require('opentracing')
@@ -20,6 +21,7 @@ local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
     report_interval = 5,
+    on_error = function(err) log.error(err.msg) end,
 }, Sampler)
 
 local function handler(req)
@@ -36,6 +38,7 @@ local function handler(req)
     -- Start new child span
     local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
     -- Set service type
+    span:set_tag('component', 'formatter')
     span:set_tag('span.kind', 'server')
     local greeting = span:get_baggage_item('greeting')
     local result = ('%s, %s!'):format(greeting, hello_to)
