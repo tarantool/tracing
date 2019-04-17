@@ -1,14 +1,13 @@
--- @module opentracing.span_context
--- @release
--- SpanContext represents @class `Span` state that must propagate to
--- descendant @class `Span`\ s and across process boundaries.
+--- SpanContext represents `Span` state that must propagate to
+-- descendant `Span`\ s and across process boundaries.
 --
 -- SpanContext is logically divided into two pieces: the user-level "Baggage"
 --  (see `Span.set_baggage_item` and `Span.get_baggage_item`) that
---  propagates across @class `Span` boundaries and any
+--  propagates across `Span` boundaries and any
 --  tracer-implementation-specific fields that are needed to identify or
---  otherwise contextualize the associated @class `Span` (e.g., a ``(trace_id,
---  span_id, sampled)`` tuple).
+--  otherwise contextualize the associated `Span` (e.g., a (trace\_id,
+--  span\_id, sampled) tuple).
+-- @module opentracing.span_context
 
 local digest = require('digest')
 local uuid = require('uuid')
@@ -38,7 +37,7 @@ local baggage_mt = {
     end,
 }
 
--- Create new span context
+--- Create new span context
 -- @function new
 -- @tparam ?string trace_id
 -- @tparam ?string span_id
@@ -63,7 +62,7 @@ local function new(trace_id, span_id, parent_id, should_sample, baggage)
     }, span_context_mt)
 end
 
--- Create span child span context
+--- Create span child span context
 -- @function child
 -- @treturn table child span context
 function span_context_methods:child()
@@ -78,7 +77,7 @@ function span_context_methods:child()
     }, span_context_mt)
 end
 
--- New from existing but with an extra baggage item
+--- New from existing but with an extra baggage item
 -- Clone context and add item to its baggage
 -- @function clone_with_baggage_item
 -- @tparam table self
@@ -99,7 +98,7 @@ function span_context_methods:clone_with_baggage_item(key, value)
     }, span_context_mt)
 end
 
--- Get item from baggage
+--- Get item from baggage
 -- @function get_baggage_item
 -- @tparam table self
 -- @tparam string key
@@ -109,7 +108,7 @@ function span_context_methods:get_baggage_item(key)
     return self.baggage and self.baggage[key]
 end
 
--- Get baggage item iterator
+--- Get baggage item iterator
 -- @function each_baggage_item
 -- @tparam table self
 -- @treturn function iterator

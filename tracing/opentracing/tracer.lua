@@ -1,10 +1,9 @@
--- @module opentracing.tracer
--- @release
--- Tracer is the entry point API between instrumentation code and the
+--- Tracer is the entry point API between instrumentation code and the
 -- tracing implementation.
 --
 -- This implementation both defines the public Tracer API, and provides
 -- a default no-op behavior.
+-- @module opentracing.tracer
 
 local clock = require("clock")
 local checks = require("checks")
@@ -37,12 +36,12 @@ local extractors_metatable = {
 }
 
 --- Init new tracer
---- @function new
---- @tparam table reporter
---- @tparam function reporter.report
---- @tparam table sampler
---- @tparam function sampler.sample
---- @treturn table tracer
+-- @function new
+-- @tparam table reporter
+-- @tparam function reporter.report
+-- @tparam table sampler
+-- @tparam function sampler.sample
+-- @treturn table tracer
 local function new(reporter, sampler)
     checks('?table', '?table')
     reporter = reporter or no_op_reporter
@@ -56,34 +55,34 @@ local function new(reporter, sampler)
     }, tracer_mt)
 end
 
---- Starts and returns a new @class `Span` representing a unit of work.
+--- Starts and returns a new `Span` representing a unit of work.
 --
 -- Example usage:
 --
--- Create a root @class `Span` (a @class `Span` with no causal references):
+-- Create a root `Span` (a `Span` with no causal references):
 --
 --      tracer:start_span("op-name")
 --
--- Create a child @class `Span`:
+-- Create a child `Span`:
 --
 --      tracer:start_span(
 --              "op-name",
 --              {["references"] = {{"child_of", parent_span:context()}}})
 --
---- @function start_span
---- @tparam table self
---- @tparam string name operation_name name of the operation represented by the new
-----    @class `Span` from the perspective of the current service.
---- @tparam ?table opts table specifying modifications to make to the
-----    newly created span. The following parameters are supported: `references`,
-----    a list of referenced spans; `start_time`, the time to mark when the span
-----    begins (in microseconds since epoch); `tags`, a table of tags to add to
-----    the created span.
---- @tparam table opts.child_of
---- @tparam table opts.references
---- @tparam table opts.tags
---- @tparam ?number opts.start_timestamp
---- @treturn table span a @class `Span` instance
+-- @function start_span
+-- @tparam table self
+-- @tparam string name operation_name name of the operation represented by the new
+--   `Span` from the perspective of the current service.
+-- @tparam ?table opts table specifying modifications to make to the
+--   newly created span. The following parameters are supported: `references`,
+--   a list of referenced spans; `start_time`, the time to mark when the span
+--   begins (in microseconds since epoch); `tags`, a table of tags to add to
+--   the created span.
+-- @tparam table opts.child_of
+-- @tparam table opts.references
+-- @tparam table opts.tags
+-- @tparam ?number opts.start_timestamp
+-- @treturn table span a `Span` instance
 function tracer_methods:start_span(name, opts)
     opts = opts or {}
     checks('table', 'string', {
@@ -147,11 +146,11 @@ function tracer_methods:report(span)
 end
 
 --- Register injector for tracer
---- @function register_injector
---- @tparam table self
---- @tparam string format
---- @tparam function injector
---- @treturn boolean `true`
+-- @function register_injector
+-- @tparam table self
+-- @tparam string format
+-- @tparam function injector
+-- @treturn boolean `true`
 function tracer_methods:register_injector(format, injector)
     checks('table', 'string', 'function|table')
     self.injectors[format] = injector
@@ -159,27 +158,27 @@ function tracer_methods:register_injector(format, injector)
 end
 
 --- Register extractor for tracer
---- @function register_extractor
---- @tparam table self
---- @tparam string format
---- @tparam function extractor
---- @treturn boolean `true`
+-- @function register_extractor
+-- @tparam table self
+-- @tparam string format
+-- @tparam function extractor
+-- @treturn boolean `true`
 function tracer_methods:register_extractor(format, extractor)
     checks('table', 'string', 'function|table')
     self.extractors[format] = extractor
     return true
 end
 
---- Inject context into carrier with specified format
---- See https://opentracing.io/docs/overview/inject-extract/
---- @function inject
---- @tparam table self
---- @tparam table context
---- @tparam string format
---- @tparam table carrier
---- @treturn[1] table carrier
---- @treturn[2] nil
---- @treturn[2] string error
+--- Inject context into carrier with specified format.
+--   See https://opentracing.io/docs/overview/inject-extract/
+-- @function inject
+-- @tparam table self
+-- @tparam table context
+-- @tparam string format
+-- @tparam table carrier
+-- @treturn[1] table carrier
+-- @treturn[2] nil
+-- @treturn[2] string error
 function tracer_methods:inject(context, format, carrier)
     checks('table', 'table', 'string', '?')
     local injector = self.injectors[format]
@@ -189,15 +188,15 @@ function tracer_methods:inject(context, format, carrier)
     return injector(context, carrier)
 end
 
---- Extract context from carrier with specified format
---- See https://opentracing.io/docs/overview/inject-extract/
---- @function extract
---- @tparam table self
---- @tparam string format
---- @tparam table carrier
---- @treturn[1] table context
---- @treturn[2] nil
---- @treturn[2] string error
+--- Extract context from carrier with specified format.
+--   See https://opentracing.io/docs/overview/inject-extract/
+-- @function extract
+-- @tparam table self
+-- @tparam string format
+-- @tparam table carrier
+-- @treturn[1] table context
+-- @treturn[2] nil
+-- @treturn[2] string error
 function tracer_methods:extract(format, carrier)
     checks('table', 'string', '?')
     local extractor = self.extractors[format]
@@ -209,60 +208,57 @@ end
 
 --- Injects `span_context` into `carrier` using a format appropriate for HTTP
 -- headers.
--- Example usage:
---
+-- @usage
 --    carrier = {}
 --    tracer:http_headers_inject(span:context(), carrier)
 --
---- @function http_headers_inject
---- @tparam table self
---- @tparam table context the @class `SpanContext` instance to inject
---- @tparam table carrier
---- @treturn table context a table to contain the span context
+-- @function http_headers_inject
+-- @tparam table self
+-- @tparam table context the `SpanContext` instance to inject
+-- @tparam table carrier
+-- @treturn table context a table to contain the span context
 function tracer_methods:http_headers_inject(context, carrier)
     return injectors.http(context, carrier)
 end
 
 --- Injects `span_context` into `carrier`.
---
--- Example usage:
---
+-- @usage
 --    carrier = {}
 --    tracer:text_map_inject(span:context(), carrier)
 --
---- @function text_map_inject
---- @tparam table self
---- @tparam table context the @class `SpanContext` instance to inject
---- @tparam table carrier
---- @treturn table context a table to contain the span context
+-- @function text_map_inject
+-- @tparam table self
+-- @tparam table context the `SpanContext` instance to inject
+-- @tparam table carrier
+-- @treturn table context a table to contain the span context
 function tracer_methods:text_map_inject(context, carrier)
     return injectors.map(context, carrier)
 end
 
---- Returns a @class `SpanContext` instance extracted from the `carrier` or
--- `nil` if no such @class `SpanContext` could be found. `http_headers_extract`
+--- Returns a `SpanContext` instance extracted from the `carrier` or
+-- `nil` if no such `SpanContext` could be found. `http_headers_extract`
 -- expects a format appropriate for HTTP headers and uses case-sensitive
 -- comparisons for the keys.
 --
---- @function http_headers_extract
---- @tparam table self
---- @tparam table carrier the format-specific carrier object to extract from
---- @treturn[1] table context
---- @treturn[2] nil
---- @treturn[2] string error
+-- @function http_headers_extract
+-- @tparam table self
+-- @tparam table carrier the format-specific carrier object to extract from
+-- @treturn[1] table context
+-- @treturn[2] nil
+-- @treturn[2] string error
 function tracer_methods:http_headers_extract(carrier)
   return extractors.http(carrier)
 end
 
---- Returns a @class `SpanContext` instance extracted from the `carrier` or
--- `nil` if no such @class `SpanContext` could be found.
+--- Returns a `SpanContext` instance extracted from the `carrier` or
+-- `nil` if no such `SpanContext` could be found.
 --
---- @function text_map_extract
---- @tparam table self
---- @tparam table carrier the format-specific carrier object to extract from
---- @treturn[1] table context
---- @treturn[2] nil
---- @treturn[2] string error
+-- @function text_map_extract
+-- @tparam table self
+-- @tparam table carrier the format-specific carrier object to extract from
+-- @treturn[1] table context
+-- @treturn[2] nil
+-- @treturn[2] string error
 function tracer_methods:text_map_extract(carrier)
   return extractors.map(carrier)
 end

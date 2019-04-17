@@ -1,4 +1,3 @@
--- @module zipkin
 local fun = require('fun')
 local log = require('log')
 local json = require('json')
