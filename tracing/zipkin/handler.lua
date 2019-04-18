@@ -15,7 +15,6 @@ function Handler.start(tracer)
             if #traces > 0 then
                 reporter:send_traces(traces)
             end
-            fiber.testcancel()
             fiber.sleep(reporter.report_interval or DEFAULT_FLUSH_INTERVAL)
         end
     end)

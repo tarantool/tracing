@@ -20,7 +20,7 @@ local tracer = zipkin.new({
     base_url = 'localhost:9411/api/v2/spans',
     api_method = 'POST',
     report_interval = 0,
-    on_error = function(err) log.error(err.msg) end,
+    on_error = function(err) log.error(err) end,
 }, Sampler)
 
 -- Client part to formatter

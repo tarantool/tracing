@@ -10,11 +10,13 @@ local Tracer = {}
 
 --- Init new Zipkin Tracer
 -- @function new
--- @tparam table config
--- @tparam table config.base_url
--- @tparam table config.api_method
--- @tparam table config.report_interval
--- @tparam table sampler
+-- @tparam table config Table with Zipkin configuration
+-- @tparam table config.base_url Zipkin API base url
+-- @tparam table config.api_method API method to send spans to zipkin
+-- @tparam table config.report_interval Interval of reports to zipkin
+-- @tparam table sampler Table that contains function sample
+--   that is apply span name and mark this span for further report
+-- @tparam function config.on_error On error callback that apply error in string format
 -- @treturn table context
 function Tracer.new(config, sampler)
     checks({ base_url = 'string',

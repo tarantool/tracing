@@ -4,11 +4,6 @@ local httpc = require('http.client')
 
 local Reporter = {}
 
-local error_codes = {
-    http = 1,
-    json_encode = 2,
-}
-
 local span_kind_map = {
     client = "CLIENT";
     server = "SERVER";
@@ -80,19 +75,17 @@ function reporter_mt:send_traces(traces)
     local client = httpc.new()
     local ok, data = pcall(json.encode, traces)
     if not ok then
-        self.on_error({
-            msg = data,
-            code = error_codes.json_encode,
-        })
+        self.on_error(data)
         return
     end
 
-    local result = client:request(self.api_method, self.base_url, data)
+    local ok, result = pcall(client.request, client, self.api_method, self.base_url, data)
+    if not ok then
+        self.on_error(result)
+        return
+    end
     if 200 > result.status or result.status >= 300 then
-        self.on_error({
-            msg = ('%s [%s] (%s)'):format(result.reason, result.status, result.body),
-            code = error_codes.http,
-        })
+        self.on_error(('%s [%s] (%s)'):format(result.reason, result.status, result.body))
     end
 end
 
