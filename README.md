@@ -4,7 +4,7 @@ Tracing module for tarantool includes following parts:
 * [OpenTracing](https://Opentracing.io) API
 * [Zipkin](https://zipkin.io/) tracer
 
-### How to install
+### How to build
 * `git submodule update --init --recursive`
 * `make build`
 
@@ -12,8 +12,12 @@ Tracing module for tarantool includes following parts:
 * `make unit`
 
 ### Details
-For details about each module open README.md in a directory of needed module  
-(`/tracing/opentracing` or `/tracing/zipkin`)
+To get more information about each module read
+[OpenTracing](tracing/opentracing/README.md) and
+[Zipkin](tracing/zipkin/README.md) READMEs.
 
 ### Documentation
 To generate documentation install `ldoc` and run `ldoc .`.
+
+### Examples
+See [Zipkin example](example/README.md)

@@ -1,15 +1,16 @@
 ---
 version: '3.6'
 
+# Initially got from https://github.com/openzipkin/docker-zipkin/blob/master/docker-compose.yml
+
 services:
   storage:
     image: openzipkin/zipkin-mysql
     container_name: mysql
     networks:
       - zipkin
-    # Uncomment to expose the storage port for testing
-    # ports:
-    #   - 3306:3306
+    ports:
+      - 3306:3306
 
   # The zipkin process services the UI, and also exposes a POST endpoint that
   # instrumentation can send trace data to. Scribe is disabled by default.
@@ -23,17 +24,11 @@ services:
       - STORAGE_TYPE=mysql
       # Point the zipkin at the storage backend
       - MYSQL_HOST=mysql
-      # Uncomment to enable scribe
-      # - SCRIBE_ENABLED=true
-      # Uncomment to enable self-tracing
-      # - SELF_TRACING_ENABLED=true
-      # Uncomment to enable debug logging
-      # - JAVA_OPTS=-Dlogging.level.zipkin=DEBUG -Dlogging.level.zipkin2=DEBUG
+      # Enable debug logging
+      - JAVA_OPTS=-Dlogging.level.zipkin=DEBUG -Dlogging.level.zipkin2=DEBUG
     ports:
       # Port used for the Zipkin UI and HTTP Api
       - 9411:9411
-      # Uncomment if you set SCRIBE_ENABLED=true
-      # - 9410:9410
     depends_on:
       - storage
 
@@ -53,10 +48,8 @@ services:
       # Add the baked-in username and password for the zipkin-mysql image
       - MYSQL_USER=zipkin
       - MYSQL_PASS=zipkin
-      # Uncomment to see dependency processing logs
-      # - ZIPKIN_LOG_LEVEL=DEBUG
-      # Uncomment to adjust memory used by the dependencies job
-      # - JAVA_OPTS=-verbose:gc -Xms1G -Xmx1G
+      # Dependency processing logs
+      - ZIPKIN_LOG_LEVEL=DEBUG
     depends_on:
       - storage
 

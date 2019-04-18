@@ -1,7 +1,11 @@
 .PHONY: build
 build:
 	rm -rf .rocks
-	cd third_party/background && tarantoolctl rocks make && rsync --recursive .rocks/ ../../.rocks
+	for lib in third_party/*; do \
+        cd $$lib \
+        && tarantoolctl rocks make \
+        && rsync --recursive .rocks/ ../../.rocks; \
+    done
 	tarantoolctl rocks make
 
 .PHONY: lint
@@ -25,4 +29,4 @@ unit:
 
 .PHONY: doc
 doc:
-	ldoc .
+	tarantoolctl rocks doc tracing

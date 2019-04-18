@@ -24,3 +24,5 @@ local span = tracer:start_span('example')
 -- ...
 span:finish()
 ```
+
+More examples see in [/example](/example) directory.
