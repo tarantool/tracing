@@ -5,7 +5,6 @@ Tracing module for tarantool includes following parts:
 * [Zipkin](https://zipkin.io/) tracer
 
 ### How to build
-* `git submodule update --init --recursive`
 * `make build`
 
 ### Run tests
