@@ -1,6 +1,5 @@
 .PHONY: build
 build:
-	rm -rf .rocks
 	tarantoolctl rocks make
 
 .PHONY: lint
@@ -23,5 +22,5 @@ unit:
 	exit $$TEST_RESULT
 
 .PHONY: doc
-doc:
+doc: build
 	tarantoolctl rocks doc tracing
