@@ -123,7 +123,8 @@ function Reporter.new(config)
              spans_limit = '?number',
              on_error = '?function' })
     if not check_api_method(config.api_method) then
-        error(config.api_method .. ' is invalid API method. Use POST, GET or PUT')
+        local error_str = config.api_method .. ' is invalid API method. Use POST, GET or PUT'
+        return nil, error_str
     end
 
     local self = {

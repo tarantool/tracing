@@ -18,7 +18,9 @@ local Tracer = {}
 -- @tparam ?number config.spans_limit Limit of a spans buffer (1k by default)
 -- @tparam table sampler Table that contains function sample
 --   that is apply span name and mark this span for further report
--- @treturn table context
+-- @treturn[1] table context
+-- @treturn[2] nil nil
+-- @treturn[2] string error
 function Tracer.new(config, sampler)
     checks({ base_url = 'string',
              api_method = 'string',
@@ -26,7 +28,11 @@ function Tracer.new(config, sampler)
              spans_limit = '?number',
              on_error = '?function' }, '?table')
 
-    local reporter = Reporter.new(config)
+    local reporter, err = Reporter.new(config)
+    if reporter == nil then
+        return nil, err
+    end
+
     local self = OpenTracingTracer.new(reporter, sampler)
 
     if config.report_interval > 0 then
