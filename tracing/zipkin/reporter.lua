@@ -79,7 +79,9 @@ local function send_traces(self, traces)
         return
     end
 
-    local ok, result = pcall(client.request, client, self.api_method, self.base_url, data)
+    local headers = {['Content-Type'] = 'application/json'}
+
+    local ok, result = pcall(client.request, client, self.api_method, self.base_url, data, { headers = headers })
     if not ok then
         self.on_error(result)
         return
