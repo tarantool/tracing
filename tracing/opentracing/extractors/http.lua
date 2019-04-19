@@ -3,10 +3,38 @@
 -- https://www.envoyproxy.io/docs/envoy/v1.6.0/configuration/http_conn_man/headers
 -- Semantic conventions: https://opentracing.io/specification/conventions/
 
+local ffi = require('ffi')
 local checks = require('checks')
 local span_context = require('opentracing.span_context')
 local carrier_validate = require('opentracing.extractors.validate')
-local utils = require('tracing.utils')
+
+ffi.cdef([[
+ typedef void CURL;
+ CURL *curl_easy_init(void);
+ char *curl_easy_unescape(CURL *handle, const char *string, int length, int *outlength);
+ void curl_free(void *p);
+]])
+
+--- URL decodes the given string
+-- See https://curl.haxx.se/libcurl/c/curl_easy_unescape.html
+-- @function url_decode
+-- @string       inp    the string
+-- @returns      result string or nil
+local function url_decode(inp)
+    local handle = ffi.C.curl_easy_init()
+    if not handle then
+        return nil
+    end
+
+    local outlength = ffi.new("int[1]")
+    local unescaped_str = ffi.C.curl_easy_unescape(handle, inp, #inp, outlength)
+    if unescaped_str == nil then
+        return nil
+    end
+
+     unescaped_str = ffi.gc(unescaped_str, ffi.C.curl_free)
+    return ffi.string(unescaped_str, outlength[0])
+end
 
 local function extract(headers)
     checks('table')
@@ -43,7 +71,7 @@ local function extract(headers)
     for k, v in pairs(headers) do
         local baggage_key = k:match("^uberctx%-(.*)$")
         if baggage_key then
-            baggage[baggage_key] = utils.url_decode(v)
+            baggage[baggage_key] = url_decode(v)
         end
     end
 

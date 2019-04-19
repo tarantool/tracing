@@ -2,8 +2,35 @@
 -- https://github.com/openzipkin/b3-propagation
 -- https://www.envoyproxy.io/docs/envoy/v1.6.0/configuration/http_conn_man/headers
 -- Semantic conventions: https://opentracing.io/specification/conventions/
+local ffi = require('ffi')
 local checks = require('checks')
-local utils = require('tracing.utils')
+
+ffi.cdef([[
+ typedef void CURL;
+ CURL *curl_easy_init(void);
+ char *curl_easy_escape(CURL *handle, const char *string, int length);
+ void curl_free(void *p);
+]])
+
+--- URL encodes the given string
+-- See https://curl.haxx.se/libcurl/c/curl_easy_escape.html
+-- @function url_encode
+-- @string       inp    the string
+-- @returns      result string or nil
+local function url_encode(inp)
+    local handle = ffi.C.curl_easy_init()
+    if not handle then
+        return nil
+    end
+
+     local escaped_str = ffi.C.curl_easy_escape(handle, inp, #inp)
+    if escaped_str == nil then
+        return nil
+    end
+
+     escaped_str = ffi.gc(escaped_str, ffi.C.curl_free)
+    return ffi.string(escaped_str)
+end
 
 local function inject(context, headers)
     checks('table', '?table')
@@ -14,7 +41,7 @@ local function inject(context, headers)
     headers["x-b3-sampled"] = context.should_sample and "1" or "0"
     for key, value in context:each_baggage_item() do
         -- XXX: https://github.com/opentracing/specification/issues/117
-        headers["uberctx-" .. key] = utils.url_encode(value)
+        headers["uberctx-" .. key] = url_encode(value)
     end
     return headers
 end

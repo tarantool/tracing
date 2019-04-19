@@ -14,14 +14,16 @@ local Tracer = {}
 -- @tparam table config.base_url Zipkin API base url
 -- @tparam table config.api_method API method to send spans to zipkin
 -- @tparam table config.report_interval Interval of reports to zipkin
+-- @tparam ?function config.on_error On error callback that apply error in string format
+-- @tparam ?number config.spans_limit Limit of a spans buffer (1k by default)
 -- @tparam table sampler Table that contains function sample
 --   that is apply span name and mark this span for further report
--- @tparam function config.on_error On error callback that apply error in string format
 -- @treturn table context
 function Tracer.new(config, sampler)
     checks({ base_url = 'string',
              api_method = 'string',
              report_interval = 'number',
+             spans_limit = '?number',
              on_error = '?function' }, '?table')
 
     local reporter = Reporter.new(config)

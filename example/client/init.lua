@@ -6,7 +6,6 @@ local log = require('log')
 local fiber = require('fiber')
 local zipkin = require('zipkin.tracer')
 local opentracing = require('opentracing')
-local utils = require('tracing.utils')
 
 local app = {}
 
@@ -14,6 +13,15 @@ local app = {}
 local Sampler = {
     sample = function() return true end,
 }
+
+local function url_encode(str)
+    local res = string.gsub(str, '[^a-zA-Z0-9_]',
+        function(c)
+            return string.format('%%%02X', string.byte(c))
+        end
+    )
+    return res
+end
 
 -- Initialize Zipkin tracer
 local tracer = zipkin.new({
@@ -41,7 +49,7 @@ local function format_string(ctx, str)
 
     -- Simulate problems with network
     fiber.sleep(1)
-    local resp = httpc:get(formatter_url .. '?helloto=' .. utils.url_encode(str),
+    local resp = httpc:get(formatter_url .. '?helloto=' .. url_encode(str),
             { headers = headers })
     fiber.sleep(1)
 
@@ -76,7 +84,7 @@ local function print_string(ctx, str)
 
     -- Simulate problems with network
     fiber.sleep(1)
-    local resp = httpc:get(printer_url .. '?hello=' .. utils.url_encode(str),
+    local resp = httpc:get(printer_url .. '?hello=' .. url_encode(str),
             { headers = headers })
     fiber.sleep(1)
 

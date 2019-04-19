@@ -30,11 +30,9 @@ build = {
 		["opentracing.injectors"] = "tracing/opentracing/injectors/init.lua",
 		["opentracing.injectors.http"] = "tracing/opentracing/injectors/http.lua",
 		["opentracing.injectors.map"] = "tracing/opentracing/injectors/map.lua",
-
 		["zipkin.handler"] = "tracing/zipkin/handler.lua",
 		["zipkin.reporter"] = "tracing/zipkin/reporter.lua",
 		["zipkin.tracer"] = "tracing/zipkin/tracer.lua",
-
-		["tracing.utils"] = "tracing/utils.lua",
+		["zipkin.bounded_queue"] = "tracing/zipkin/bounded_queue.lua",
 	},
 }

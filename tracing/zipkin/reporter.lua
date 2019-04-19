@@ -1,21 +1,24 @@
 local fun = require('fun')
 local json = require('json')
+local checks = require('checks')
 local httpc = require('http.client')
+local bounded_queue = require('zipkin.bounded_queue')
 
 local Reporter = {}
 
+local DEFAULT_SPANS_LIMIT = 1e3
+
 local span_kind_map = {
-    client = "CLIENT";
-    server = "SERVER";
-    producer = "PRODUCER";
-    consumer = "CONSUMER";
+    client = "CLIENT",
+    server = "SERVER",
+    producer = "PRODUCER",
+    consumer = "CONSUMER",
 }
 
 local function format_span(span)
     local ctx = span:context()
     local tags = {}
 
-    -- TODO: export tags as strings
     for k, v in span:each_tag() do
         -- Zipkin tag values should be strings
         -- see https://zipkin.io/zipkin-api/#/default/post_spans
@@ -68,10 +71,7 @@ local function format_span(span)
     }
 end
 
-local reporter_mt = {}
-reporter_mt.__index = reporter_mt
-
-function reporter_mt:send_traces(traces)
+local function send_traces(self, traces)
     local client = httpc.new()
     local ok, data = pcall(json.encode, traces)
     if not ok then
@@ -91,36 +91,56 @@ end
 
 -- Should we persist it?
 local function background_report(self, span)
-    table.insert(self.spans, span)
+    self.spans:push(span)
 end
 
-local function cli_report(self, span)
+local function immediately_report(self, span)
     self:send_traces({format_span(span)})
 end
 
 -- Should we clear spans after unsuccessful request to zipkin?
-function reporter_mt:flush()
-    local spans = self.spans
-    self.spans = {}
+local function flush(self)
+    local spans = self.spans:dump()
+    self.spans:clear()
     return fun.iter(spans):map(format_span):totable()
 end
 
+local function check_api_method(method)
+    local available_methods = {
+        ['POST'] = true,
+        ['GET'] = true,
+        ['PUT'] = true,
+    }
+    return available_methods[method]
+end
+
 function Reporter.new(config)
+    checks({ base_url = 'string',
+             api_method = 'string',
+             report_interval = 'number',
+             spans_limit = '?number',
+             on_error = '?function' })
+    if not check_api_method(config.api_method) then
+        error(config.api_method .. ' is invalid API method. Use POST, GET or PUT')
+    end
+
     local self = {
-        spans = {},
+        spans = bounded_queue.new(config.spans_limit or DEFAULT_SPANS_LIMIT),
         base_url = config.base_url,
         api_method = config.api_method,
         report_interval = config.report_interval,
-        on_error = config.on_error or function() end
+        on_error = config.on_error or function() end,
+        flush = flush,
+        send_traces = send_traces,
     }
 
     if self.report_interval > 0 then
         self.report = background_report
     else
-        self.report = cli_report
+        self.report = immediately_report
     end
 
-    return setmetatable(self, reporter_mt)
+    return self
 end
 
 return Reporter
