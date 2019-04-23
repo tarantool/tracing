@@ -93,8 +93,8 @@ end
 -- @function finish
 -- @tparam table self
 -- @tparam ?number finish_timestamp a timestamp represented by microseconds
---   since the epoch to mark when the span ended. If unspecified, the current
---   time will be used.
+--  since the epoch to mark when the span ended. If unspecified, the current
+--  time will be used.
 -- @treturn[1] boolean `true`
 -- @treturn[2] boolean `false`
 -- @treturn[2] string error
@@ -353,7 +353,7 @@ function span_methods:set_http_url(url)
 end
 
 --- Set the domain portion of the URL or host header.
---    Used to filter by host as opposed to ip address.
+--   Used to filter by host as opposed to ip address.
 -- @function set_http_host
 -- @tparam table self
 -- @tparam string host
@@ -362,14 +362,14 @@ function span_methods:set_http_host(host)
 end
 
 --- Set the absolute http path, without any query parameters.
---    Used as a filter or to clarify the request path for a given route. For example, the path for
---    a route "/objects/:objectId" could be "/objects/abdc-ff". This does not limit cardinality like
---    HTTP_ROUTE("http.route") can, so is not a good input to a span name.
+--   Used as a filter or to clarify the request path for a given route. For example, the path for
+--   a route "/objects/:objectId" could be "/objects/abdc-ff". This does not limit cardinality like
+--   HTTP_ROUTE("http.route") can, so is not a good input to a span name.
 --
---    The Zipkin query api only supports equals filters. Dropping query parameters makes the number
---    of distinct URIs less. For example, one can query for the same resource, regardless of signing
---    parameters encoded in the query line. Dropping query parameters also limits the security impact
---    of this tag.
+--   The Zipkin query api only supports equals filters. Dropping query parameters makes the number
+--   of distinct URIs less. For example, one can query for the same resource, regardless of signing
+--   parameters encoded in the query line. Dropping query parameters also limits the security impact
+--   of this tag.
 -- @function set_http_path
 -- @tparam table self
 -- @tparam string path
@@ -378,14 +378,14 @@ function span_methods:set_http_path(path)
 end
 
 --- Set the route which a request matched or "" (empty string) if routing is supported, but there was no match.
---    Unlike HTTP_PATH("http.path"), this value is fixed cardinality, so is a safe input to a span
---    name function or a metrics dimension. Different formats are possible. For example, the following
---    are all valid route templates: "/users" "/users/:userId" "/users/*"
+--   Unlike HTTP_PATH("http.path"), this value is fixed cardinality, so is a safe input to a span
+--   name function or a metrics dimension. Different formats are possible. For example, the following
+--   are all valid route templates: "/users" "/users/:userId" "/users/*"
 --
---    Route-based span name generation often uses other tags, such as HTTP_METHOD("http.method") and
---    HTTP_STATUS_CODE("http.status_code"). Route-based names can look like "get /users/{userId}",
---    "post /users", "get not_found" or "get redirected".
--- @function http_route
+--   Route-based span name generation often uses other tags, such as HTTP_METHOD("http.method") and
+--   HTTP_STATUS_CODE("http.status_code"). Route-based names can look like "get /users/{userId}",
+--   "post /users", "get not_found" or "get redirected".
+-- @function set_http_route
 -- @tparam table self
 -- @tparam string route
 function span_methods:set_http_route(route)
@@ -393,7 +393,7 @@ function span_methods:set_http_route(route)
 end
 
 --- Set the size of the non-empty HTTP request body, in bytes.
---    Large uploads can exceed limits or contribute directly to latency.
+--   Large uploads can exceed limits or contribute directly to latency.
 -- @function set_http_request_size
 -- @tparam table self
 -- @tparam string host
@@ -402,7 +402,7 @@ function span_methods:set_http_request_size(size)
 end
 
 --- Set the size of the non-empty HTTP response body, in bytes.
---    Large downloads can exceed limits or contribute directly to latency.
+--   Large downloads can exceed limits or contribute directly to latency.
 -- @function set_response_size
 -- @tparam table self
 -- @tparam string host
@@ -411,7 +411,7 @@ function span_methods:set_response_size(size)
 end
 
 --- Set remote "address", suitable for use in a networking client library.
---    This may be a "ip:port", a bare "hostname", a FQDN, or even a JDBC substring like "mysql://prod-db:3306"
+--   This may be a "ip:port", a bare "hostname", a FQDN, or even a JDBC substring like "mysql://prod-db:3306"
 -- @function set_peer_address
 -- @tparam table self
 -- @tparam string address
@@ -479,7 +479,7 @@ local span_kind = {
 
 --- Set span's king
 -- Either "client" or "server" for the appropriate roles in an RPC,
---   and "producer" or "consumer" for the appropriate roles in a messaging scenario.
+--  and "producer" or "consumer" for the appropriate roles in a messaging scenario.
 -- @function set_kind
 -- @tparam table self
 -- @tparam string kind

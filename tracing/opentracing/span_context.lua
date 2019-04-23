@@ -1,5 +1,5 @@
 --- SpanContext represents `Span` state that must propagate to
--- descendant `Span`\ s and across process boundaries.
+-- descendant `Span`\'s and across process boundaries.
 --
 -- SpanContext is logically divided into two pieces: the user-level "Baggage"
 --  (see `Span.set_baggage_item` and `Span.get_baggage_item`) that
