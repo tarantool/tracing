@@ -15,17 +15,9 @@ local Sampler = {
 local HOST = '0.0.0.0'
 local PORT = '33302'
 
--- Initialize zipkin client that will be send spans every 5 seconds
-local tracer = zipkin.new({
-    base_url = 'localhost:9411/api/v2/spans',
-    api_method = 'POST',
-    report_interval = 5,
-    on_error = function(err) log.error(err) end,
-}, Sampler)
-
 local function handler(req)
     -- Extract content from request's http headers
-    local ctx, err = tracer:http_headers_extract(req.headers)
+    local ctx, err = opentracing.tracer:http_headers_extract(req.headers)
     if ctx == nil then
         local resp = req:render({ text = err })
         resp.status = 400
@@ -34,7 +26,7 @@ local function handler(req)
 
     local hello_to = req:query_param('helloto')
     -- Start new child span
-    local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
+    local span = opentracing.start_span_from_context(ctx, 'format_string')
     -- Set service type
     span:set_tag('component', 'formatter')
     span:set_tag('span.kind', 'server')
@@ -54,6 +46,15 @@ local function handler(req)
 end
 
 function app.init()
+    -- Initialize zipkin client that will be send spans every 5 seconds
+    local tracer = zipkin.new({
+        base_url = 'localhost:9411/api/v2/spans',
+        api_method = 'POST',
+        report_interval = 5,
+        on_error = function(err) log.error(err) end,
+    }, Sampler)
+    opentracing.set_global_tracer(tracer)
+
     local httpd = http_server.new(HOST, PORT)
     httpd:route({ path = '/format', method = 'GET' }, handler)
     httpd:start()

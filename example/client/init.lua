@@ -23,18 +23,10 @@ local function url_encode(str)
     return res
 end
 
--- Initialize Zipkin tracer
-local tracer = zipkin.new({
-    base_url = 'localhost:9411/api/v2/spans',
-    api_method = 'POST',
-    report_interval = 0,
-    on_error = function(err) log.error(err) end,
-}, Sampler)
-
 -- Client part to formatter
 local formatter_url = 'http://localhost:33302/format'
 local function format_string(ctx, str)
-    local span = opentracing.start_span_from_context(tracer, ctx, 'format_string')
+    local span = opentracing.start_span_from_context(ctx, 'format_string')
     local httpc = http_client.new()
     span:set_tag('component', 'client')
     span:set_tag('span.kind', 'client')
@@ -45,7 +37,7 @@ local function format_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    tracer:http_headers_inject(span:context(), headers)
+    opentracing.tracer:http_headers_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)
@@ -70,7 +62,7 @@ end
 -- Client part to publisher
 local printer_url = 'http://localhost:33303/print'
 local function print_string(ctx, str)
-    local span = opentracing.start_span_from_context(tracer, ctx, 'print_string')
+    local span = opentracing.start_span_from_context(ctx, 'print_string')
     local httpc = http_client.new()
     span:set_tag('component', 'client')
     span:set_tag('span.kind', 'client')
@@ -80,7 +72,7 @@ local function print_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    tracer:http_headers_inject(span:context(), headers)
+    opentracing.tracer:http_headers_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)
@@ -96,8 +88,17 @@ local function print_string(ctx, str)
 end
 
 function app.init()
-    -- Initialize main span
-    local span = tracer:start_span('Hello-world')
+    -- Initialize Zipkin tracer
+    local tracer = zipkin.new({
+        base_url = 'localhost:9411/api/v2/spans',
+        api_method = 'POST',
+        report_interval = 0,
+        on_error = function(err) log.error(err) end,
+    }, Sampler)
+    opentracing.set_global_tracer(tracer)
+
+    -- Initialize root span
+    local span = opentracing.start_span('Hello-world')
 
     local hello_to = 'world'
     local greeting = 'my greeting'
