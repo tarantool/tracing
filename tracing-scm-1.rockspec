@@ -1,8 +1,9 @@
 package = "tracing"
-version = "0.0.1-1"
+version = "scm-1"
 
 source = {
 	url = "https://gitlab.com/tarantool/enterprise/tracing.git",
+	branch = "master",
 }
 
 description = {

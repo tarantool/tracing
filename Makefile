@@ -1,3 +1,6 @@
+#! /bin/bash
+SHELL:=/bin/bash
+
 .PHONY: build
 build:
 	tarantoolctl rocks make
@@ -14,7 +17,7 @@ TEST_FILES := \
 unit:
 	TEST_RESULT=0; \
 	for f in $(TEST_FILES); do \
-		echo '\nExecuting test '$(basename $$f)'...'; \
+		echo -e '\nExecuting test '$(basename $$f)'...'; \
 		$$f; \
 		let TEST_RESULT=$$TEST_RESULT+$$?; \
 		[ $$TEST_RESULT -gt 0 ] && exit $$TEST_RESULT; \
@@ -22,5 +25,5 @@ unit:
 	exit $$TEST_RESULT
 
 .PHONY: doc
-doc: build
-	tarantoolctl rocks doc tracing
+doc:
+	ldoc -t "tracing" -p "tracing" --all .
