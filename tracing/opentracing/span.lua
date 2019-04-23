@@ -278,6 +278,254 @@ function span_methods:each_baggage_item()
     return self.ctx:each_baggage_item()
 end
 
+--- Extension. Inspired by https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go
+-- See all possible tags:
+-- https://github.com/opentracing/specification/blob/master/semantic_conventions.md#standard-span-tags-and-log-fields
+
+local span_tag = {
+    component = 'component',
+    db_instance = 'db.instance',
+    db_statement = 'db.statement',
+    db_type = 'db.type',
+    db_user = 'db.user',
+    http_method = 'http.method',
+    http_status_code = 'http.status_code',
+    http_url = 'http.url',
+    message_bus_destination = 'message_bus.destination',
+    peer_address = 'peer.address',
+    peer_hostname = 'peer.hostname',
+    peer_ipv4 = 'peer.ipv4',
+    peer_ipv6 = 'peer.ipv6',
+    peer_port = 'peer.port',
+    peer_service = 'peer.service',
+    sampling_priority = 'sampling.priority',
+    span_kind = 'span.kind',
+-- ZipKin specific tags
+-- See https://zipkin.io/public/thrift/v1/zipkinCore.html
+    error = 'error',
+    client_send = 'cs',
+    client_received = 'cr',
+    server_send = 'ss',
+    server_received = 'sr',
+    message_send = 'ms',
+    message_received = 'mr',
+    http_host = 'http.host',
+    http_path = 'http.path',
+    http_route = 'http.route',
+    http_request_size = 'http.request.size',
+    http_response_size = 'http.response.size',
+    local_component = 'lc',
+    client_addr = 'ca',
+    server_addr = 'sa',
+    message_addr = 'ma',
+}
+
+--- Set component tag (The software package, framework, library, or module that generated the associated Span.)
+-- @function set_component
+-- @tparam table self
+-- @tparam string component
+function span_methods:set_component(component)
+    self:set_tag(span_tag.component, component)
+end
+
+--- Set HTTP method of the request for the associated Span
+-- @function set_http_method
+-- @tparam table self
+-- @tparam string method
+function span_methods:set_http_method(method)
+    self:set_tag(span_tag.http_method, method)
+end
+
+--- Set HTTP response status code for the associated Span
+-- @function set_http_status_code
+-- @tparam table self
+-- @tparam number status_code
+function span_methods:set_http_status_code(status_code)
+    self:set_tag(span_tag.http_status_code, status_code)
+end
+
+--- Set URL of the request being handled in this segment of the trace, in standard URI format
+-- @function set_http_url
+-- @tparam table self
+-- @tparam string url
+function span_methods:set_http_url(url)
+    self:set_tag(span_tag.http_url, url)
+end
+
+--- Set the domain portion of the URL or host header.
+--    Used to filter by host as opposed to ip address.
+-- @function set_http_host
+-- @tparam table self
+-- @tparam string host
+function span_methods:set_http_host(host)
+    self:set_tag(span_tag.http_host, host)
+end
+
+--- Set the absolute http path, without any query parameters.
+--    Used as a filter or to clarify the request path for a given route. For example, the path for
+--    a route "/objects/:objectId" could be "/objects/abdc-ff". This does not limit cardinality like
+--    HTTP_ROUTE("http.route") can, so is not a good input to a span name.
+--
+--    The Zipkin query api only supports equals filters. Dropping query parameters makes the number
+--    of distinct URIs less. For example, one can query for the same resource, regardless of signing
+--    parameters encoded in the query line. Dropping query parameters also limits the security impact
+--    of this tag.
+-- @function set_http_path
+-- @tparam table self
+-- @tparam string path
+function span_methods:set_http_path(path)
+    self:set_tag(span_tag.http_path, path)
+end
+
+--- Set the route which a request matched or "" (empty string) if routing is supported, but there was no match.
+--    Unlike HTTP_PATH("http.path"), this value is fixed cardinality, so is a safe input to a span
+--    name function or a metrics dimension. Different formats are possible. For example, the following
+--    are all valid route templates: "/users" "/users/:userId" "/users/*"
+--
+--    Route-based span name generation often uses other tags, such as HTTP_METHOD("http.method") and
+--    HTTP_STATUS_CODE("http.status_code"). Route-based names can look like "get /users/{userId}",
+--    "post /users", "get not_found" or "get redirected".
+-- @function http_route
+-- @tparam table self
+-- @tparam string route
+function span_methods:set_http_route(route)
+    self:set_tag(span_tag.http_route, route)
+end
+
+--- Set the size of the non-empty HTTP request body, in bytes.
+--    Large uploads can exceed limits or contribute directly to latency.
+-- @function
+-- @tparam table self
+-- @tparam string host
+function span_methods:set_http_request_size(size)
+    self:set_tag(span_tag.http_request_size, size)
+end
+
+--- Set the size of the non-empty HTTP response body, in bytes.
+--    Large downloads can exceed limits or contribute directly to latency.
+-- @function set_response_size
+-- @tparam table self
+-- @tparam string host
+function span_methods:set_response_size(size)
+    self:set_tag(span_tag.http_response_size, size)
+end
+
+--- Set remote "address", suitable for use in a networking client library.
+--    This may be a "ip:port", a bare "hostname", a FQDN, or even a JDBC substring like "mysql://prod-db:3306"
+-- @function set_peer_address
+-- @tparam table self
+-- @tparam string address
+function span_methods:set_peer_address(address)
+    self:set_tag(span_tag.peer_address, address)
+end
+
+--- Set remote hostname
+-- @function set_peer_hostname
+-- @tparam table self
+-- @tparam string hostname
+function span_methods:set_peer_hostname(hostname)
+    self:set_tag(span_tag.peer_hostname, hostname)
+end
+
+--- Set remote IPv4 address as a .-separated tuple
+-- @function set_peer_ipv4
+-- @tparam table self
+-- @tparam string IPv4
+function span_methods:set_peer_ipv4(ipv4)
+    self:set_tag(span_tag.peer_ipv4, ipv4)
+end
+
+--- Set remote IPv6 address as a string of colon-separated 4-char hex tuples
+-- @function set_peer_ipv6
+-- @tparam table self
+-- @tparam string IPv6
+function span_methods:set_peer_ipv6(ipv6)
+    self:set_tag(span_tag.peer_ipv6, ipv6)
+end
+
+--- Set remote port
+-- @function set_peer_port
+-- @tparam table self
+-- @tparam number port
+function span_methods:set_peer_port(port)
+    self:set_tag(span_tag.peer_port, port)
+end
+
+--- Set remote service name (for some unspecified definition of "service")
+-- @function set_peer_service
+-- @tparam table self
+-- @tparam string service_name
+function span_methods:set_peer_service(service)
+    self:set_tag(span_tag.peer_service, service)
+end
+
+--- Set sampling priority
+--   If greater than 0, a hint to the Tracer to do its best to capture the trace.
+--   If 0, a hint to the trace to not-capture the trace.
+--   If absent, the Tracer should use its default sampling mechanism.
+-- @function set_sampling_priority
+-- @tparam table self
+-- @tparam number priority
+function span_methods:set_sampling_priority(priority)
+    self:set_tag(span_tag.sampling_priority, priority)
+end
+
+local span_kind = {
+    client = 'client',
+    server = 'server',
+    producer = 'producer',
+    consumer = 'consumer',
+}
+
+--- Set span's king
+-- Either "client" or "server" for the appropriate roles in an RPC,
+--   and "producer" or "consumer" for the appropriate roles in a messaging scenario.
+-- @function set_kind
+-- @tparam table self
+-- @tparam string kind
+function span_methods:set_kind(kind)
+    self:set_tag(span_tag.span_kind, kind)
+end
+
+--- Set client kind to span
+-- @function set_client_kind
+-- @tparam table self
+function span_methods:set_client_kind()
+    self:set_tag(span_tag.span_kind, span_kind.client)
+end
+
+--- Set server kind to span
+-- @function set_server_kind
+-- @tparam table self
+function span_methods:set_server_kind()
+    self:set_tag(span_tag.span_kind, span_kind.server)
+end
+
+--- Set producer kind to span
+-- @function set_producer_kind
+-- @tparam table self
+function span_methods:set_producer_kind()
+    self:set_tag(span_tag.span_kind, span_kind.producer)
+end
+
+--- Set consumer kind to span
+-- @function set_consumer_kind
+-- @tparam table self
+function span_methods:set_consumer_kind()
+    self:set_tag(span_tag.span_kind, span_kind.consumer)
+end
+
+-- OpenTracing semantic conventions says that error tag should be a string
+-- However ZipKin reports error as message:
+-- https://cloud.spring.io/spring-cloud-sleuth/2.0.x/single/spring-cloud-sleuth.html#_visualizing_errors
+--- Set error
+-- @function set_component
+-- @tparam table self
+-- @tparam string err
+function span_methods:set_error(err)
+    self:set_tag(span_tag.error, err)
+end
+
 return {
     new = new,
 }
