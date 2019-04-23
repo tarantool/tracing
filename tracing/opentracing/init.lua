@@ -43,11 +43,24 @@ function opentracing.start_span_from_context(context, name)
 end
 
 --- Trace function with context by global tracer
+--   This function starts span from global tracer and finishes it after execution
 -- @function trace_with_context
 -- @tparam string name span name
 -- @tparam table ctx context
 -- @tparam function fun wrapped function
 -- @tparam vararg ... function's arguments
+-- @usage
+--    -- Process HTTP request
+--    local ctx = opentracing.extractors.http(req.headers)
+--    local result, err = opentracing.trace_with_context('process_data', ctx, process_data, req.body)
+--    -- Wrap functions. In example we create root span that generates two child spans
+--    local span = opentracing.start_span()
+--    local result, err = opentracing.trace_with_context('format_string', span:context(), format, str)
+--    if not result ~= nil then
+--        print('Error: ', err)
+--    end
+--    opentracing.trace_with_context('print_string', span:context(), print, result)
+--    span:finish()
 -- @treturn[1] vararg result
 -- @treturn[2] nil nil
 -- @treturn[2] string err error message
@@ -65,10 +78,13 @@ function opentracing.trace_with_context(name, ctx, fun, ...)
 end
 
 --- Trace function by global tracer
+--   This function starts span from global tracer and finishes it after execution
 -- @function trace
 -- @tparam string name span name
 -- @tparam function fun wrapped function
 -- @tparam vararg ... function's arguments
+-- @usage
+--    local result, err = opentracing.trace_with_context('process_data', process_data, req.body)
 -- @treturn[1] vararg result
 -- @treturn[2] nil nil
 -- @treturn[2] string err error message

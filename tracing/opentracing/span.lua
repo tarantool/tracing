@@ -394,7 +394,7 @@ end
 
 --- Set the size of the non-empty HTTP request body, in bytes.
 --    Large uploads can exceed limits or contribute directly to latency.
--- @function
+-- @function set_http_request_size
 -- @tparam table self
 -- @tparam string host
 function span_methods:set_http_request_size(size)
