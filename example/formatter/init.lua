@@ -28,8 +28,10 @@ local function handler(req)
     -- Start new child span
     local span = opentracing.start_span_from_context(ctx, 'format_string')
     -- Set service type
-    span:set_tag('component', 'formatter')
-    span:set_tag('span.kind', 'server')
+    span:set_component('formatter')
+    span:set_server_kind()
+    span:set_http_method(req.method)
+    span:set_http_path(req.path)
     local greeting = span:get_baggage_item('greeting')
     local result = ('%s, %s!'):format(greeting, hello_to)
     local resp = req:render({ text = result })
@@ -41,6 +43,7 @@ local function handler(req)
         value = result,
     })
     resp.status = 200
+    span:set_http_status_code(resp.status)
     span:finish()
     return resp
 end

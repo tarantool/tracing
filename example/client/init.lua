@@ -28,10 +28,10 @@ local formatter_url = 'http://localhost:33302/format'
 local function format_string(ctx, str)
     local span = opentracing.start_span_from_context(ctx, 'format_string')
     local httpc = http_client.new()
-    span:set_tag('component', 'client')
-    span:set_tag('span.kind', 'client')
-    span:set_tag('http.method', 'GET')
-    span:set_tag('http.url', formatter_url)
+    span:set_component('client')
+    span:set_client_kind()
+    span:set_http_method('GET')
+    span:set_http_url(formatter_url)
 
     -- Use http headers as carrier
     local headers = {
@@ -45,7 +45,7 @@ local function format_string(ctx, str)
             { headers = headers })
     fiber.sleep(1)
 
-    span:set_tag('http.status_code', resp.status)
+    span:set_http_status_code(resp.status)
     if resp.status ~= 200 then
         error('Format string error: ' .. json.encode(resp))
     end
@@ -64,10 +64,10 @@ local printer_url = 'http://localhost:33303/print'
 local function print_string(ctx, str)
     local span = opentracing.start_span_from_context(ctx, 'print_string')
     local httpc = http_client.new()
-    span:set_tag('component', 'client')
-    span:set_tag('span.kind', 'client')
-    span:set_tag('http.method', 'GET')
-    span:set_tag('http.url', printer_url)
+    span:set_component('client')
+    span:set_client_kind()
+    span:set_http_method('GET')
+    span:set_http_url(printer_url)
 
     local headers = {
         ['content-type'] = 'application/json'
@@ -80,7 +80,7 @@ local function print_string(ctx, str)
             { headers = headers })
     fiber.sleep(1)
 
-    span:set_tag('http.status_code', resp.status)
+    span:set_http_status_code(resp.status)
     if resp.status ~= 200 then
         error('Print string error: ' .. json.encode(resp))
     end
@@ -102,9 +102,9 @@ function app.init()
 
     local hello_to = 'world'
     local greeting = 'my greeting'
-    span:set_tag('component', 'client')
+    span:set_component('client')
     -- Set service type
-    span:set_tag('span.kind', 'client')
+    span:set_client_kind()
     -- Set tag with metadata
     span:set_tag('hello-to', hello_to)
     -- Add data to baggage

@@ -6,10 +6,11 @@ local ffi = require('ffi')
 local checks = require('checks')
 
 ffi.cdef([[
- typedef void CURL;
- CURL *curl_easy_init(void);
- char *curl_easy_escape(CURL *handle, const char *string, int length);
- void curl_free(void *p);
+    typedef void CURL;
+    CURL *curl_easy_init(void);
+    void curl_easy_cleanup(CURL *handle);
+    char *curl_easy_escape(CURL *handle, const char *string, int length);
+    void curl_free(void *p);
 ]])
 
 --- URL encodes the given string
@@ -23,13 +24,15 @@ local function url_encode(inp)
         return nil
     end
 
-     local escaped_str = ffi.C.curl_easy_escape(handle, inp, #inp)
+    local escaped_str = ffi.C.curl_easy_escape(handle, inp, #inp)
+    ffi.C.curl_easy_cleanup(handle)
     if escaped_str == nil then
         return nil
     end
 
-     escaped_str = ffi.gc(escaped_str, ffi.C.curl_free)
-    return ffi.string(escaped_str)
+    local out = ffi.string(escaped_str)
+    escaped_str = ffi.C.curl_free(escaped_str)
+    return out
 end
 
 local function inject(context, headers)

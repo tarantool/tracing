@@ -26,8 +26,10 @@ local function handler(req)
 
     local hello = req:query_param('hello')
     local span = opentracing.start_span_from_context(ctx, 'print_string')
-    span:set_tag('component', 'publisher')
-    span:set_tag('span.kind', 'server')
+    span:set_component('publisher')
+    span:set_server_kind()
+    span:set_http_method(req.method)
+    span:set_http_path(req.path)
 
     -- Simulate long request processing
     fiber.sleep(3)
@@ -35,7 +37,7 @@ local function handler(req)
     io.write(hello, '\n')
     local resp = req:render({text = '' })
     resp.status = 200
-
+    span:set_http_status_code(resp.status)
     span:finish()
     return resp
 end

@@ -9,10 +9,11 @@ local span_context = require('opentracing.span_context')
 local carrier_validate = require('opentracing.extractors.validate')
 
 ffi.cdef([[
- typedef void CURL;
- CURL *curl_easy_init(void);
- char *curl_easy_unescape(CURL *handle, const char *string, int length, int *outlength);
- void curl_free(void *p);
+    typedef void CURL;
+    CURL *curl_easy_init(void);
+    void curl_easy_cleanup(CURL *handle);
+    char *curl_easy_unescape(CURL *handle, const char *string, int length, int *outlength);
+    void curl_free(void *p);
 ]])
 
 --- URL decodes the given string
@@ -28,12 +29,14 @@ local function url_decode(inp)
 
     local outlength = ffi.new("int[1]")
     local unescaped_str = ffi.C.curl_easy_unescape(handle, inp, #inp, outlength)
+    ffi.C.curl_easy_cleanup(handle)
     if unescaped_str == nil then
         return nil
     end
 
-     unescaped_str = ffi.gc(unescaped_str, ffi.C.curl_free)
-    return ffi.string(unescaped_str, outlength[0])
+    local out = ffi.string(unescaped_str, outlength[0])
+    unescaped_str = ffi.C.curl_free(unescaped_str)
+    return out
 end
 
 local function extract(headers)
