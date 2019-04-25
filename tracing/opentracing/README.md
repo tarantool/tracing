@@ -49,3 +49,17 @@ local opentracing_tracer = require('opentracing.tracer')
 -- sampler (optional) - Table with `sample` method to select traces to send to distributing tracing system (by default random selection)
 local tracer = opentracing_tracer.new(reporter, sampler)
 ```
+
+## Basic usage
+```lua
+local zipkin = require('zipkin.tracer')
+local opentracing = require('opentracing')
+
+local tracer = zipkin.new(config)
+opentracing.set_global_tracer(tracer)
+
+local span = opentracing.start_span('root span')
+opentracing.trace_with_context('child span 1', span:context(), fun1, arg1)
+opentracing.trace_with_context('child span 2', span:context(), fun2, arg2)
+span:finish()
+```
