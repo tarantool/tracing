@@ -32,7 +32,13 @@ local opentracing_span_context = require('opentracing.span_context')
 -- parent_id (optional) - Span ID of parent span (by default is empty)
 -- should_sample (optional) - Flag is enable collecting data of this span (by default false)
 -- baggage (optional) - Table with trace baggage (by default is empty table)
-local context = opentracing_span_context.new(trace_id, span_id, parent_id, should_sample, baggage)
+local context = opentracing_span_context.new({
+                    tracer_id = trace_id,
+                    span_id = span_id,
+                    parent_id = parent_id,
+                    should_sample = should_sample,
+                    baggage = baggage,
+                })
 ```
 
 ### Tracer
@@ -41,5 +47,5 @@ An interface for custom tracers
 local opentracing_tracer = require('opentracing.tracer')
 -- reporter (optional) - Table with `report` method to process finished spans (by default no-op table)
 -- sampler (optional) - Table with `sample` method to select traces to send to distributing tracing system (by default random selection)
-local tracer = opentracing_tracer.new(reporter, samplter)
+local tracer = opentracing_tracer.new(reporter, sampler)
 ```

@@ -74,18 +74,20 @@ end
 -- @tparam string name operation_name name of the operation represented by the new
 --   `Span` from the perspective of the current service.
 -- @tparam ?table opts table specifying modifications to make to the
---   newly created span. The following parameters are supported: `references`,
+--   newly created span. The following parameters are supported: `trace_id`, `references`,
 --   a list of referenced spans; `start_time`, the time to mark when the span
 --   begins (in microseconds since epoch); `tags`, a table of tags to add to
 --   the created span.
--- @tparam table opts.child_of
--- @tparam table opts.references
--- @tparam table opts.tags
+-- @tparam ?string opts.trace_id
+-- @tparam ?table opts.child_of
+-- @tparam ?table opts.references
+-- @tparam ?table opts.tags
 -- @tparam ?number opts.start_timestamp
 -- @treturn table span a `Span` instance
 function tracer_methods:start_span(name, opts)
     opts = opts or {}
     checks('table', 'string', {
+        trace_id = '?string',
         child_of = '?table',
         references = '?table',
         tags = '?table',
@@ -103,7 +105,6 @@ function tracer_methods:start_span(name, opts)
         error("It seems references is used, but it is not supported. Use child_of instead")
     end
 
-    local tags = opts.tags
     local start_timestamp = opts.start_timestamp or self:time()
     -- Allow opentracing_span.new to validate
 
@@ -113,7 +114,10 @@ function tracer_methods:start_span(name, opts)
     else
         local should_sample
         should_sample, extra_tags = self.sampler:sample(name)
-        context = opentracing_span_context.new(nil, nil, nil, should_sample)
+        context = opentracing_span_context.new({
+            trace_id = opts.trace_id,
+            should_sample = should_sample,
+        })
     end
 
     local span = opentracing_span.new(self, context, name, start_timestamp)
@@ -124,8 +128,8 @@ function tracer_methods:start_span(name, opts)
         end
     end
 
-    if tags ~= nil then
-        for k, v in pairs(tags) do
+    if opts.tags ~= nil then
+        for k, v in pairs(opts.tags) do
             span:set_tag(k, v)
         end
     end

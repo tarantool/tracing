@@ -17,7 +17,7 @@ local PORT = '33302'
 
 local function handler(req)
     -- Extract content from request's http headers
-    local ctx, err = opentracing.tracer:http_headers_extract(req.headers)
+    local ctx, err = opentracing.http_extract(req.headers)
     if ctx == nil then
         local resp = req:render({ text = err })
         resp.status = 400

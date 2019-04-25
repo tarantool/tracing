@@ -39,25 +39,28 @@ local baggage_mt = {
 
 --- Create new span context
 -- @function new
--- @tparam ?string trace_id
--- @tparam ?string span_id
--- @tparam ?string parent_id
--- @tparam ?boolean should_sample
--- @tparam ?table baggage
+-- @tparam ?table opts options
+-- @tparam ?string opts.trace_id
+-- @tparam ?string opts.span_id
+-- @tparam ?string opts.parent_id
+-- @tparam ?boolean opts.should_sample
+-- @tparam ?table opts.baggage
 -- @treturn table span context
-local function new(trace_id, span_id, parent_id, should_sample, baggage)
-    checks('?string', '?string', '?string', '?boolean', '?table')
-    trace_id = trace_id or generate_trace_id()
-    span_id = span_id or generate_span_id()
+local function new(opts)
+    opts = opts or {}
+    checks({ trace_id = '?string', span_id = '?string', parent_id = '?string',
+             should_sample = '?boolean', baggage = '?table' })
+    local trace_id = opts.trace_id or generate_trace_id()
+    local span_id = opts.span_id or generate_span_id()
 
-    local baggage_copy = table.deepcopy(baggage) or {}
-    baggage = setmetatable(baggage_copy, baggage_mt)
+    local baggage = table.deepcopy(opts.baggage) or {}
+    setmetatable(baggage, baggage_mt)
 
     return setmetatable({
         trace_id = trace_id,
         span_id = span_id,
-        parent_id = parent_id,
-        should_sample = should_sample,
+        parent_id = opts.parent_id,
+        should_sample = opts.should_sample,
         baggage = baggage,
     }, span_context_mt)
 end

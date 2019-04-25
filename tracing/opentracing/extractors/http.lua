@@ -35,7 +35,7 @@ local function url_decode(inp)
     end
 
     local out = ffi.string(unescaped_str, outlength[0])
-    unescaped_str = ffi.C.curl_free(unescaped_str)
+    ffi.C.curl_free(unescaped_str)
     return out
 end
 
@@ -82,7 +82,13 @@ local function extract(headers)
     local parent_span_id = carrier.parent_span_id and string.fromhex(carrier.parent_span_id)
     local span_id = carrier.span_id and string.fromhex(carrier.span_id)
 
-    return span_context.new(trace_id, span_id, parent_span_id, sample, baggage)
+    return span_context.new({
+        trace_id = trace_id,
+        span_id = span_id,
+        parent_id = parent_span_id,
+        should_sample = sample,
+        baggage = baggage
+    })
 end
 
 return extract

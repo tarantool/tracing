@@ -37,7 +37,7 @@ local function format_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    opentracing.tracer:http_headers_inject(span:context(), headers)
+    opentracing.http_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)
@@ -72,7 +72,7 @@ local function print_string(ctx, str)
     local headers = {
         ['content-type'] = 'application/json'
     }
-    opentracing.tracer:http_headers_inject(span:context(), headers)
+    opentracing.http_inject(span:context(), headers)
 
     -- Simulate problems with network
     fiber.sleep(1)

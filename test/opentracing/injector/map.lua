@@ -6,7 +6,11 @@ local map_inject = require('opentracing.injectors.map')
 
 test:plan(1)
 
-local context = span_context.new(nil, nil, nil, true, {key = 'value'})
+local context = span_context.new({
+    should_sample = true,
+    baggage = {key = 'value'}
+})
+
 local map = {
     field = 'dummy',
 }

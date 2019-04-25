@@ -31,7 +31,7 @@ local function url_encode(inp)
     end
 
     local out = ffi.string(escaped_str)
-    escaped_str = ffi.C.curl_free(escaped_str)
+    ffi.C.curl_free(escaped_str)
     return out
 end
 

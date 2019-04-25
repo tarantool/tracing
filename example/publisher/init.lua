@@ -16,7 +16,7 @@ local HOST = '0.0.0.0'
 local PORT = '33303'
 
 local function handler(req)
-    local ctx, err = opentracing.tracer:http_headers_extract(req.headers)
+    local ctx, err = opentracing.http_extract(req.headers)
 
     if ctx == nil then
         local resp = req:render({ text = err })

@@ -6,7 +6,11 @@ local map_extract = require('opentracing.extractors.map')
 
 test:plan(5)
 
-local context = span_context.new(nil, nil, nil, true, {key = 'value'})
+local context = span_context.new({
+    should_sample = true,
+    baggage = {key = 'value'}
+})
+
 local map = {
     field = 'dummy',
     trace_id = context.trace_id,

@@ -2,6 +2,8 @@
 -- @module opentracing
 local checks = require('checks')
 local span = require('opentracing.span')
+local extractors = require('opentracing.extractors')
+local injectors = require('opentracing.injectors')
 
 local opentracing = {
     tracer = nil,
@@ -25,10 +27,19 @@ end
 --- Start root span
 -- @function start_span
 -- @tparam string name
+-- @tparam ?table opts table specifying modifications to make to the
+--   newly created span. The following parameters are supported: `trace_id`, `references`,
+--   a list of referenced spans; `start_time`, the time to mark when the span
+--   begins (in microseconds since epoch); `tags`, a table of tags to add to
+--   the created span.
+-- @tparam ?string opts.trace_id
+-- @tparam ?table opts.child_of
+-- @tparam ?table opts.references
+-- @tparam ?table opts.tags
 -- @treturn table span
-function opentracing.start_span(name)
-    checks('string')
-    return opentracing.tracer:start_span(name)
+function opentracing.start_span(name, opts)
+    checks('string', '?table')
+    return opentracing.tracer:start_span(name, opts)
 end
 
 --- Start new child span from context
@@ -100,5 +111,11 @@ function opentracing.trace(name, fun, ...)
     end
     return unpack(result, 2, table.maxn(result))
 end
+
+-- Aliases for useful and available functions
+opentracing.http_extract = extractors.http
+opentracing.map_extract = extractors.map
+opentracing.http_inject = injectors.http
+opentracing.map_inject = injectors.map
 
 return opentracing
