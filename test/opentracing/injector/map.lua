@@ -17,9 +17,9 @@ local map = {
 
 test:is_deeply({
     field = 'dummy',
-    trace_id = context.trace_id,
-    span_id = context.span_id,
-    parent_id = context.parent_id,
+    trace_id = context.trace_id and string.hex(context.trace_id),
+    span_id = context.span_id and string.hex(context.span_id),
+    parent_id = context.parent_id and string.hex(context.parent_id),
     sample = context.should_sample,
     baggage = {key = 'value'},
 }, map_inject(context, map), 'Inject context into map')
