@@ -1,11 +1,14 @@
 local function validate_span_id(span_id)
-    return (span_id == nil) or ((#span_id == 8 or #span_id == 16) and span_id:match("%X") == nil)
+    if span_id == nil then
+        return true
+    end
+    return (#span_id == 8 or #span_id == 16) and span_id:match("%X") == nil
 end
 
 local function validate(carrier)
     -- Validate trace id
     local trace_id = carrier.trace_id
-    if trace_id == nil or ((#trace_id ~= 16 and #trace_id ~= 32) or trace_id:match("%X")) then
+    if trace_id ~= nil and ((#trace_id ~= 16 and #trace_id ~= 32) or trace_id:match("%X")) then
         return false, 'Invalid trace id'
     end
 

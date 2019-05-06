@@ -3,10 +3,12 @@
 local test = require('tap').test('HTTP extractor')
 local http_extractor = require('opentracing.extractors.http')
 
-test:plan(3)
+test:plan(6)
 
-local empty = http_extractor({})
-test:isnil(empty, 'Headers without traceId')
+local empty_context = http_extractor({ ["x-b3-sampled"] = '1' })
+test:ok(empty_context.trace_id, 'Generate trace_id for new context')
+test:ok(empty_context.span_id, 'Generate span_id for new context')
+test:ok(empty_context.should_sample == true, 'Sampling is enabled')
 
 local headers = {
     ['x-b3-traceid'] = '80f198ee56343ba864fe8b2a57d3eff7',
@@ -19,6 +21,7 @@ local headers = {
 
 local result, _ = http_extractor(headers)
 test:isnt(nil, result, 'Headers are decoded')
+test:ok(result.should_sample, 'Sampling is enabled')
 test:is('baggage item', result:get_baggage_item('item'), 'Extract baggage item')
 
 os.exit(test:check() and 0 or 1)

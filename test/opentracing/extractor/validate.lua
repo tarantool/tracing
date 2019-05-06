@@ -6,8 +6,8 @@ local validate = require('opentracing.extractors.validate')
 
 test:plan(22)
 local ok, err = validate({})
-test:is(false, ok, 'empty carrier validation')
-test:is('Invalid trace id', err, 'empty carrier validation - err')
+test:is(true, ok, 'empty carrier validation')
+test:isnil(err, 'empty carrier validation - err')
 
 ok, err = validate({ trace_id = '123123123' })
 test:is(false, ok, 'invalid trace id length')
