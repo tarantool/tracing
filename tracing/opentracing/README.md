@@ -47,6 +47,8 @@ An interface for custom tracers
 local opentracing_tracer = require('opentracing.tracer')
 -- reporter (optional) - Table with `report` method to process finished spans (by default no-op table)
 -- sampler (optional) - Table with `sample` method to select traces to send to distributing tracing system (by default random selection)
+-- But you can implement your own sampler with appropriate sampling strategy
+-- For more information see: https://www.jaegertracing.io/docs/1.11/sampling/
 local tracer = opentracing_tracer.new(reporter, sampler)
 ```
 
