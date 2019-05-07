@@ -92,25 +92,38 @@ end
 -- If `finish` is called a second time, it is guaranteed to do nothing.
 -- @function finish
 -- @tparam table self
--- @tparam ?number finish_timestamp a timestamp represented by microseconds
+-- @tparam table opts
+-- @tparam number ?opts.finish_timestamp a timestamp represented by microseconds
 --  since the epoch to mark when the span ended. If unspecified, the current
 --  time will be used.
+-- @tparam string ?opts.error add error tag
 -- @treturn[1] boolean `true`
 -- @treturn[2] boolean `false`
 -- @treturn[2] string error
-function span_methods:finish(finish_timestamp)
-    checks('table', '?number|cdata')
+function span_methods:finish(opts)
+    opts = opts or {}
+    checks('table', {
+        timestamp = '?number|cdata',
+        error = '?',
+    })
+
     if self.duration ~= nil then
-        return false, 'span already finished'
+        return nil, 'span already finished'
     end
-    if finish_timestamp == nil then
+
+    if opts.timestamp == nil then
         self.duration = self.tracer:time() - self.timestamp
     else
-        self.duration = finish_timestamp - self.timestamp
+        self.duration = opts.timestamp - self.timestamp
         if self.duration < 0 then
             return nil, 'Span duration can not be negative'
         end
     end
+
+    if opts.error ~= nil then
+        self:set_error(opts.error)
+    end
+
     if self.ctx.should_sample then
         self.tracer:report(self)
     end
