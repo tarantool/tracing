@@ -461,7 +461,7 @@ end
 -- @tparam table self
 -- @tparam number port
 function span_methods:set_peer_port(port)
-    self:set_tag(span_tag.peer_port, port)
+    self:set_tag(span_tag.peer_port, tonumber(port))
 end
 
 --- Set remote service name (for some unspecified definition of "service")
