@@ -26,15 +26,6 @@ local function format_span(span)
         tags[k] = tostring(v)
     end
 
-    -- Zipkin doesn't have fields for baggage. Merge baggage and tags
-    for k, v in span:each_baggage_item() do
-        -- Zipkin tag values should be strings
-        -- see https://zipkin.io/zipkin-api/#/default/post_spans
-        -- and https://github.com/Kong/kong-plugin-zipkin/pull/13#issuecomment-402389342
-        tags[k] = tostring(v)
-    end
-    tags['debug'] = nil
-
     local span_kind  = tags['span.kind']
     tags['span.kind'] = nil
 
