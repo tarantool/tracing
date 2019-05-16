@@ -7,6 +7,7 @@ local log = require('log')
 local http_client = require('http.client')
 local ZipkinTracer = require('zipkin.tracer')
 local ZipkinHandler = require('zipkin.handler')
+local opentracing = require('opentracing')
 
 local Sampler = {
     sample = function() return true end,
@@ -25,17 +26,26 @@ end
 
 healthcheck()
 
-test:plan(2)
+test:plan(3)
 
-local function check_trace_id(trace_id)
+local function get_trace(trace_id)
     local httpc = http_client.new()
     local trace_id_hex = string.hex(trace_id)
     local result = httpc:get(base_url .. '/trace/' .. trace_id_hex)
     local result_body = result.body and json.decode(result.body)
     if result_body == nil or result_body[1] == nil then
+        return nil
+    end
+    return result_body
+end
+
+local function check_trace_id(trace_id)
+    local trace = get_trace(trace_id)
+    local trace_id_hex = string.hex(trace_id)
+    if trace == nil then
         return false
     end
-    return result_body[1]['traceId'] == trace_id_hex
+    return trace[1]['traceId'] == trace_id_hex
 end
 
 test:test('Background reporter', function(test)
@@ -75,6 +85,55 @@ test:test('CLI-reporter', function(test)
     })
     test:ok(span:finish(), 'Successfully finish span. Client report')
     test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
+end)
+
+test:test('Several spans', function(test)
+    local child_span_count = 9
+    test:plan(child_span_count * 2 + 2)
+    local report_interval = 2
+    local tracer = ZipkinTracer.new({
+        base_url = base_url .. '/spans',
+        api_method = 'POST',
+        report_interval = report_interval,
+    }, Sampler)
+    opentracing.set_global_tracer(tracer)
+
+    local context = {}
+
+    local span = tracer:start_span('root')
+    span:set_client_kind()
+    opentracing.map_inject(span:context(), context)
+
+    local chan = fiber.channel(child_span_count)
+    for i = 1, child_span_count do
+        fiber.create(function()
+            local span_context = opentracing.map_extract(context)
+            local child_span = opentracing.start_span_from_context(
+                    span_context, 'child_span ' .. tostring(i))
+            child_span:set_server_kind()
+            fiber.sleep(math.random(10) / 10)
+            child_span:finish()
+            chan:put({})
+        end)
+    end
+
+    for i = 1, child_span_count do
+        chan:get()
+    end
+    span:finish()
+
+    fiber.sleep(report_interval)
+
+    local trace = get_trace(span:context().trace_id)
+    test:ok(#trace == 10, '1 root + 9 child spans')
+    table.sort(trace, function(a, b) return a.name < b.name end)
+    test:is(context.span_id, trace[10].id, 'Root span id correct')
+    for i = 1, child_span_count do
+        test:is('child_span ' .. tostring(i), trace[i].name,
+                ('Child span name %s is ok'):format(i))
+        test:is(context.span_id, trace[i].parentId,
+                ('Parent id of %s is ok'):format(i))
+    end
 end)
 
 os.exit(test:check() and 0 or 1)
