@@ -30,8 +30,7 @@ test:plan(3)
 
 local function get_trace(trace_id)
     local httpc = http_client.new()
-    local trace_id_hex = string.hex(trace_id)
-    local result = httpc:get(base_url .. '/trace/' .. trace_id_hex)
+    local result = httpc:get(base_url .. '/trace/' .. trace_id)
     local result_body = result.body and json.decode(result.body)
     if result_body == nil or result_body[1] == nil then
         return nil
@@ -41,11 +40,10 @@ end
 
 local function check_trace_id(trace_id)
     local trace = get_trace(trace_id)
-    local trace_id_hex = string.hex(trace_id)
     if trace == nil then
         return false
     end
-    return trace[1]['traceId'] == trace_id_hex
+    return trace[1]['traceId'] == trace_id
 end
 
 test:test('Background reporter', function(test)

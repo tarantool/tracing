@@ -32,8 +32,8 @@ local http_headers = {
 
 http_injector(context, http_headers)
 test:is_deeply({
-    ['x-b3-traceid'] = string.hex(trace_id),
-    ['x-b3-spanid'] = string.hex(span_id),
+    ['x-b3-traceid'] = trace_id,
+    ['x-b3-spanid'] = span_id,
     ['content-type'] = 'application/json',
     ['x-b3-sampled'] = '0',
 }, http_headers, 'Inject headers')

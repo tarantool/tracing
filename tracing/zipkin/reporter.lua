@@ -54,10 +54,10 @@ local function format_span(span)
     end
 
     return {
-        traceId = string.hex(ctx.trace_id),
+        traceId = ctx.trace_id,
         name = span.name,
-        parentId = ctx.parent_id and string.hex(ctx.parent_id) or nil,
-        id = string.hex(ctx.span_id),
+        parentId = ctx.parent_id,
+        id = ctx.span_id,
         kind = span_kind_map[span_kind],
         timestamp = span.timestamp,
         duration = span.duration,

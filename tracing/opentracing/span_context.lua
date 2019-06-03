@@ -16,12 +16,12 @@ local checks = require('checks')
 -- TODO: choose length of trace_id and span_id depends on options if we plan to support another tracing systems
 -- For zipkin compat, use 128 bit trace ids
 local function generate_trace_id()
-    return uuid.bin()
+    return string.hex(uuid.bin())
 end
 
 -- For zipkin compat, use 64 bit span ids
 local function generate_span_id()
-    return digest.urandom(8)
+    return string.hex(digest.urandom(8))
 end
 
 local span_context_methods = {}

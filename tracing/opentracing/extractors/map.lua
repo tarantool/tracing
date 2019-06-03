@@ -9,9 +9,9 @@ local span_context = require('opentracing.span_context')
 local function extract(carrier)
     checks('table')
     return span_context.new({
-        trace_id = carrier.trace_id and string.fromhex(carrier.trace_id),
-        span_id = carrier.span_id and string.fromhex(carrier.span_id),
-        parent_id = carrier.parent_span_id and string.fromhex(carrier.parent_span_id),
+        trace_id = carrier.trace_id,
+        span_id = carrier.span_id,
+        parent_id = carrier.parent_span_id,
         should_sample = carrier.sample,
         baggage = carrier.baggage
     })

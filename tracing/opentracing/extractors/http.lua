@@ -78,9 +78,9 @@ local function extract(headers)
         end
     end
 
-    local trace_id = carrier.trace_id and string.fromhex(carrier.trace_id)
-    local parent_span_id = carrier.parent_span_id and string.fromhex(carrier.parent_span_id)
-    local span_id = carrier.span_id and string.fromhex(carrier.span_id)
+    local trace_id = carrier.trace_id
+    local parent_span_id = carrier.parent_span_id
+    local span_id = carrier.span_id
 
     return span_context.new({
         trace_id = trace_id,
