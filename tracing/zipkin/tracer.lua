@@ -14,6 +14,7 @@ local Tracer = {}
 -- @tparam table config.base_url Zipkin API base url
 -- @tparam table config.api_method API method to send spans to zipkin
 -- @tparam table config.report_interval Interval of reports to zipkin
+-- @tparam table config.spans_limit Maximal amount of spans stored locally
 -- @tparam ?function config.on_error On error callback that apply error in string format
 -- @tparam ?number config.spans_limit Limit of a spans buffer (1k by default)
 -- @tparam table sampler Table that contains function sample
