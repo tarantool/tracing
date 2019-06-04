@@ -7,3 +7,4 @@
 *.xlog
 *.vylog
 /doc
+/release

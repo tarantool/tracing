@@ -1,6 +1,13 @@
 #! /bin/bash
 SHELL:=/bin/bash
 
+.PHONY: all doc
+all:
+	mkdir -p doc
+
+doc:
+	ldoc -t "tracing-${version}" -p "tracing (${version})" --all .
+
 .PHONY: build
 build:
 	tarantoolctl rocks make
@@ -23,7 +30,3 @@ unit:
 		[ $$TEST_RESULT -gt 0 ] && exit $$TEST_RESULT; \
 	done; \
 	exit $$TEST_RESULT
-
-.PHONY: doc
-doc:
-	ldoc -t "tracing" -p "tracing" --all .
