@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.1.0] - 2019-06-05
+
 - OpenTracing API implementation
 - Zipkin client
-- Lua API documentation, which you can read with `tarantoolctl rocks doc tracing` command.
+- Lua API documentation, which you can read with `tarantoolctl rocks doc tracing` command
