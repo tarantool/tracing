@@ -16,12 +16,15 @@ build:
     - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - export PATH=$PWD/tarantool-enterprise:$PATH
-    - yum -y install git gcc make unzip which lua-devel luarocks
+    - yum -y install git gcc make unzip which lua-devel luarocks java-1.8.0-openjdk
+    - curl -sSL https://zipkin.apache.org/quickstart.sh | bash -s
     - tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
     - tarantoolctl rocks install https://raw.githubusercontent.com/mpeterv/luacheck/master/luacheck-dev-1.rockspec
     - export PATH=.rocks/bin:$PATH
   script:
     - tarantoolctl rocks make
+    - java -jar zipkin.jar &
+    - sleep 10
     - make lint
     - make unit
     - ./release.sh
