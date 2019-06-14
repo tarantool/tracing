@@ -28,6 +28,10 @@ healthcheck()
 
 test:plan(3)
 
+local function log_error(err)
+    log.error(err)
+end
+
 local function get_trace(trace_id)
     local httpc = http_client.new()
     local result = httpc:get(base_url .. '/trace/' .. trace_id)
@@ -52,6 +56,7 @@ test:test('Background reporter', function(test)
         base_url = base_url .. '/spans',
         api_method = 'POST',
         report_interval = 0.2,
+        on_error = log_error,
     }, Sampler)
 
     local span_name = 'test_1'
@@ -62,7 +67,7 @@ test:test('Background reporter', function(test)
     })
     span:log('dummy_reporter', 'log ' .. span_name)
     test:ok(span:finish(), 'Successfully finish span. Background report')
-    fiber.sleep(1)
+    fiber.sleep(5)
     ZipkinHandler.stop()
     test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
 end)
@@ -73,6 +78,7 @@ test:test('CLI-reporter', function(test)
         base_url = base_url .. '/spans',
         api_method = 'POST',
         report_interval = 0,
+        on_error = log_error,
     }, Sampler)
 
     local span_name = 'test_2'
@@ -87,12 +93,13 @@ end)
 
 test:test('Several spans', function(test)
     local child_span_count = 9
-    test:plan(child_span_count * 2 + 2)
+    test:plan(child_span_count * 2 + 3)
     local report_interval = 2
     local tracer = ZipkinTracer.new({
         base_url = base_url .. '/spans',
         api_method = 'POST',
         report_interval = report_interval,
+        on_error = log_error,
     }, Sampler)
     opentracing.set_global_tracer(tracer)
 
@@ -115,7 +122,7 @@ test:test('Several spans', function(test)
         end)
     end
 
-    for i = 1, child_span_count do
+    for _ = 1, child_span_count do
         chan:get()
     end
     span:finish()
@@ -123,6 +130,7 @@ test:test('Several spans', function(test)
     fiber.sleep(report_interval)
 
     local trace = get_trace(span:context().trace_id)
+    test:ok(trace, 'Trace was returned')
     test:ok(#trace == 10, '1 root + 9 child spans')
     table.sort(trace, function(a, b) return a.name < b.name end)
     test:is(context.span_id, trace[10].id, 'Root span id correct')

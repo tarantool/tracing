@@ -8,7 +8,6 @@ local worker
 
 function Handler.start(tracer)
     local reporter = tracer.reporter
-
     worker = fiber.create(function()
         while true do
             local traces = reporter:flush()

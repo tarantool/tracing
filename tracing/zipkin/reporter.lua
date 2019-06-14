@@ -80,7 +80,6 @@ local function send_traces(self, traces)
     end
 
     local headers = {['Content-Type'] = 'application/json'}
-
     local ok, result = pcall(client.request, client, self.api_method, self.base_url, data, { headers = headers })
     if not ok then
         self.on_error(result)
@@ -91,7 +90,6 @@ local function send_traces(self, traces)
     end
 end
 
--- Should we persist it?
 local function background_report(self, span)
     self.spans:push(span)
 end
@@ -103,8 +101,11 @@ end
 -- Should we clear spans after unsuccessful request to zipkin?
 local function flush(self)
     local spans = self.spans:dump()
-    self.spans:clear()
-    return fun.iter(spans):map(format_span):totable()
+    local formatted_spans = fun.iter(spans):map(format_span):totable()
+    if #spans > 0 then
+        self.spans:clear()
+    end
+    return formatted_spans
 end
 
 local function check_api_method(method)

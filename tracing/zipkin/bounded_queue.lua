@@ -23,7 +23,7 @@ function bounded_queue:dump()
 end
 
 function bounded_queue:clear()
-    self.buffer = table.new(self.max_length, 0)
+    table.clear(self.buffer)
     self.first = 0
     self.last = 0
 end
