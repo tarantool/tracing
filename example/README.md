@@ -1,16 +1,15 @@
 # Zipkin example
 
-This example is Lua port of 
+This example is a Lua port of
 [Go OpenTracing tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/go).
 
 ## Description
 
-Example demonstrates trace propagation through two services:
-`formatter` that format source string to "Hello, world" 
-and `publisher` that print it in console.
+The example demonstrates trace propagation through two services:
+`formatter` that formats the source string to "Hello, world"
+and `publisher` that prints it in the console.
 
-Add data this services get via HTTP and 
-initially it sends `client`
+Add data to these services via HTTP; initially it sends `client`.
 
 ### How to run
 From root package directory:
