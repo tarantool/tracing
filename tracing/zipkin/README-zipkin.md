@@ -1,6 +1,6 @@
 # Zipkin
 
-> [Zipkin](https://zipkin.io/) is a distributed tracing system.
+[Zipkin](https://zipkin.io/) is a distributed tracing system.
 It helps gather timing data needed to troubleshoot latency problems in microservice architectures.
 It manages both the collection and lookup of this data.
 
@@ -25,4 +25,4 @@ local span = tracer:start_span('example')
 span:finish()
 ```
 
-More examples see in [/example](/example) directory.
+More examples see in /example directory.

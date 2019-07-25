@@ -1,6 +1,7 @@
 # Tracing for Tarantool Enterprise
 
 `Tracing` module for Tarantool includes the following parts:
+
 * [OpenTracing](https://Opentracing.io) API
 * [Zipkin](https://zipkin.io/) tracer
 

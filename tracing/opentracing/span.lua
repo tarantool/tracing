@@ -1,14 +1,14 @@
---- Span represents a unit of work executed on behalf of a trace. Examples of
--- spans include a remote procedure call, or a in-process method call to a
--- sub-component. Every span in a trace may have zero or more causal parents,
+--- Span represents a unit of work executed on behalf of a trace.
+-- Examples of spans include a remote procedure call, or a in-process method call
+-- to a sub-component. Every span in a trace may have zero or more causal parents,
 -- and these relationships transitively form a DAG. It is common for spans to
 -- have at most one parent, and thus most traces are merely tree structures.
---
 -- The internal data structure is modeled off the ZipKin Span JSON Structure
 -- This makes it cheaper to convert to JSON for submission to the ZipKin HTTP api,
 -- which Jaegar also implements.
+--
 -- You can find it documented in this OpenAPI spec:
--- https://github.com/openzipkin/zipkin-api/blob/7e33e977/zipkin2-api.yaml#L280
+--  https://github.com/openzipkin/zipkin-api/blob/7e33e977/zipkin2-api.yaml#L280
 -- @module opentracing.span
 
 local checks = require('checks')
@@ -293,7 +293,7 @@ end
 
 --- Extension. Inspired by https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go
 -- See all possible tags:
--- https://github.com/opentracing/specification/blob/master/semantic_conventions.md#standard-span-tags-and-log-fields
+--  https://github.com/opentracing/specification/blob/master/semantic_conventions.md#standard-span-tags-and-log-fields
 
 local span_tag = {
     component = 'component',
