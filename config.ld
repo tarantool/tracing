@@ -7,8 +7,6 @@ file = {
 }
 topics = {
 	"CHANGELOG.md",
-	"README.md",
-	"tracing/opentracing/README-opentracing.md",
-	"tracing/zipkin/README-zipkin.md"
+	"README.md"
 }
 format = 'markdown'
