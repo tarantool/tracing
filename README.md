@@ -112,11 +112,15 @@ and `publisher` that prints it in the console.
 
 Add data to these services via HTTP; initially it sends `client`.
 
+*Note: example requires http rock (version >= 2.0.1)*
+*Install it using `tarantoolctl rocks install http 2.0.1`*
+
 ### How to run
 
 * Create `docker-compose.zipkin.yml`
 
 ```yaml
+
 ---
 version: '3.5'
 
@@ -185,6 +189,7 @@ Formatter HTTP server
 #!/usr/bin/env tarantool
 
 local http_server = require('http.server')
+local http_router = require('http.router')
 local fiber = require('fiber')
 local log = require('log')
 local zipkin = require('zipkin.tracer')
@@ -201,7 +206,7 @@ local PORT = '33302'
 
 local function handler(req)
     -- Extract content from request's http headers
-    local ctx, err = opentracing.http_extract(req.headers)
+    local ctx, err = opentracing.http_extract(req:headers())
     if ctx == nil then
         local resp = req:render({ text = err })
         resp.status = 400
@@ -243,7 +248,9 @@ function app.init()
     opentracing.set_global_tracer(tracer)
 
     local httpd = http_server.new(HOST, PORT)
-    httpd:route({ path = '/format', method = 'GET' }, handler)
+    local router = http_router.new()
+        :route({ path = '/format', method = 'GET' }, handler)
+    httpd:set_router(router)
     httpd:start()
 end
 
@@ -257,6 +264,7 @@ Publisher HTTP server
 #!/usr/bin/env tarantool
 
 local http_server = require('http.server')
+local http_router = require('http.router')
 local fiber = require('fiber')
 local log = require('log')
 local zipkin = require('zipkin.tracer')
@@ -272,7 +280,7 @@ local HOST = '0.0.0.0'
 local PORT = '33303'
 
 local function handler(req)
-    local ctx, err = opentracing.http_extract(req.headers)
+    local ctx, err = opentracing.http_extract(req:headers())
 
     if ctx == nil then
         local resp = req:render({ text = err })
@@ -308,8 +316,9 @@ function app.init()
     opentracing.set_global_tracer(tracer)
 
     local httpd = http_server.new(HOST, PORT)
-    httpd:route({ path = '/print', method = 'GET' }, handler)
-    httpd:start()
+    local router = http_router.new()
+        :route({ path = '/print', method = 'GET' }, handler)
+    httpd:set_router(router)
 end
 
 app.init()

@@ -1,6 +1,14 @@
 #!/usr/bin/env tarantool
 
-local http_server = require('http.server')
+local ok, http_server = pcall(require,'http.server')
+
+if not ok then
+    print('Example requires http module (version >= 2.0.1)')
+    print('Install using "tarantoolctl rocks install http 2.0.1"')
+    os.exit(1)
+end
+
+local http_router = require('http.router')
 local fiber = require('fiber')
 local log = require('log')
 local zipkin = require('zipkin.tracer')
@@ -17,7 +25,7 @@ local PORT = '33302'
 
 local function handler(req)
     -- Extract content from request's http headers
-    local ctx, err = opentracing.http_extract(req.headers)
+    local ctx, err = opentracing.http_extract(req:headers())
     if ctx == nil then
         local resp = req:render({ text = err })
         resp.status = 400
@@ -59,7 +67,8 @@ function app.init()
     opentracing.set_global_tracer(tracer)
 
     local httpd = http_server.new(HOST, PORT)
-    httpd:route({ path = '/format', method = 'GET' }, handler)
+    local router = http_router.new():route({ path = '/format', method = 'GET' }, handler)
+    httpd:set_router(router)
     httpd:start()
 end
 
