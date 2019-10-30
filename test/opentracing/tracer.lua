@@ -49,6 +49,7 @@ test:test("takes returned sampler tags into account", function(test)
     for k, v in span:each_tag() do
         tags[k] = v
     end
+
     test:is_deeply({["sampler.type"] = "mock"}, tags)
 end)
 

@@ -34,10 +34,9 @@ local function new(tracer, context, name, start_timestamp)
         name = name,
         timestamp = start_timestamp or tracer:time(),
         duration = nil,
-        -- Avoid allocations until needed
-        baggage = {},
-        tags = {},
-        logs = {},
+        baggage = nil,
+        tags = nil,
+        logs = nil,
     }, span_mt)
 end
 
@@ -101,6 +100,11 @@ end
 -- @treturn[2] boolean `false`
 -- @treturn[2] string error
 function span_methods:finish(opts)
+    if self.ctx.should_sample ~= true or
+            self.tracer.report == nil then
+        return true
+    end
+
     opts = opts or {}
     checks('table', {
         timestamp = '?number|cdata',
@@ -124,9 +128,7 @@ function span_methods:finish(opts)
         self:set_error(opts.error)
     end
 
-    if self.ctx.should_sample then
-        self.tracer:report(self)
-    end
+    self.tracer:report(self)
     return true
 end
 
@@ -140,7 +142,12 @@ end
 -- @treturn boolean `true`
 function span_methods:set_tag(key, value)
     checks('table', 'string', '?')
-    self.tags[key] = value
+    if self.tags == nil then
+        self.tags = { [key] = value }
+    else
+        self.tags[key] = value
+    end
+
     return true
 end
 
@@ -152,11 +159,10 @@ end
 function span_methods:get_tag(key)
     checks('table', 'string')
     local tags = self.tags
-    if tags then
+    if tags ~= nil then
         return tags[key]
-    else
-        return nil
     end
+    return nil
 end
 
 --- Get tags iterator
@@ -174,11 +180,14 @@ function span_methods:each_tag()
 end
 
 --- Get copy of span's tags
--- @function tags
+-- @function get_tags
 -- @tparam table self
 -- @treturn table tags
-function span_methods:tags()
+function span_methods:get_tags()
     checks('table')
+    if self.tags == nil then
+        return {}
+    end
     return table.deepcopy(self.tags)
 end
 
@@ -193,11 +202,16 @@ function span_methods:log(key, value, timestamp)
     -- `value` is allowed to be anything.
     checks('table', 'string', '?', '?number|cdata')
     timestamp = timestamp or self.tracer:time()
-    table.insert(self.logs, {
-        key = key,
-        value = value,
-        timestamp = timestamp,
-    })
+    if self.logs == nil then
+        self.logs = {{ key = key, value = value, timestamp = timestamp }}
+    else
+        table.insert(self.logs, {
+            key = key,
+            value = value,
+            timestamp = timestamp,
+        })
+    end
+
     return true
 end
 
@@ -218,7 +232,7 @@ end
 function span_methods:log_kv(key_values, timestamp)
     checks('table', 'table', '?number|cdata')
     timestamp = timestamp or self.tracer:time()
-
+    self.logs = self.logs or {}
     for key, value in pairs(key_values) do
         table.insert(self.logs, {
             key = key,
@@ -237,6 +251,9 @@ end
 -- @treturn table logs
 function span_methods:each_log()
     checks('table')
+    if self.logs == nil then
+        return function() end
+    end
     local i = 0
     return function(logs)
         if i >= #self.logs then

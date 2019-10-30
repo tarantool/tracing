@@ -4,7 +4,7 @@ local tap = require('tap')
 
 local test = tap.test('opentracing.span_context')
 
-test:plan(4)
+test:plan(5)
 local opentracing_span_context = require("opentracing.span_context")
 local new_context = opentracing_span_context.new
 
@@ -43,6 +43,23 @@ test:test("allows constructing with baggage items", function(test)
     test:is("some value", context:get_baggage_item("somekey"))
     baggage_arg.modified = "other"
     test:is(nil, context:get_baggage_item("modified"))
+end)
+
+test:test("dummy span_context", function(test)
+    test:plan(6)
+
+    local context1 = new_context({ parent_id = '0000000000000000', should_sample = false })
+    test:is(context1.span_id, '0000000000000000', "span_id is not generated without sampling")
+    test:is(context1.trace_id, '00000000-0000-0000-0000-000000000000', "trace_id is not generated without sampling")
+
+    local context2 = new_context({ parent_id = '0000000000000000', should_sample = true })
+    test:isnt(context2.span_id, '0000000000000000', "span_id is generated without sampling")
+    test:isnt(context2.trace_id, '00000000-0000-0000-0000-000000000000', "trace_id is generated without sampling")
+
+    local dummy_child = context1:child()
+    test:is(dummy_child.span_id, '0000000000000000', "span_id is not generated without sampling for child")
+    test:is(dummy_child.trace_id, '00000000-0000-0000-0000-000000000000',
+            "trace_id is not generated without sampling for child")
 end)
 
 os.exit(test:check() and 0 or 1)

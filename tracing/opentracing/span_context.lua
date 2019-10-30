@@ -13,14 +13,23 @@ local digest = require('digest')
 local uuid = require('uuid')
 local checks = require('checks')
 
+local dummy_span_id = '0000000000000000'
+local dummy_trace_id = '00000000-0000-0000-0000-000000000000'
+
 -- TODO: choose length of trace_id and span_id depends on options if we plan to support another tracing systems
 -- For zipkin compat, use 128 bit trace ids
-local function generate_trace_id()
+local function generate_trace_id(should_sample)
+    if should_sample ~= true then
+        return dummy_trace_id
+    end
     return string.hex(uuid.bin())
 end
 
 -- For zipkin compat, use 64 bit span ids
-local function generate_span_id()
+local function generate_span_id(should_sample)
+    if should_sample ~= true then
+        return dummy_span_id
+    end
     return string.hex(digest.urandom(8))
 end
 
@@ -50,11 +59,14 @@ local function new(opts)
     opts = opts or {}
     checks({ trace_id = '?string', span_id = '?string', parent_id = '?string',
              should_sample = '?boolean', baggage = '?table' })
-    local trace_id = opts.trace_id or generate_trace_id()
-    local span_id = opts.span_id or generate_span_id()
 
-    local baggage = table.deepcopy(opts.baggage) or {}
-    setmetatable(baggage, baggage_mt)
+    local trace_id = opts.trace_id or generate_trace_id(opts.should_sample)
+    local span_id = opts.span_id or generate_span_id(opts.should_sample)
+    local baggage
+    if opts.baggage ~= nil then
+        baggage = table.deepcopy(opts.baggage)
+        setmetatable(baggage, baggage_mt)
+    end
 
     return setmetatable({
         trace_id = trace_id,
@@ -70,9 +82,11 @@ end
 -- @treturn table child span context
 function span_context_methods:child()
     checks('table')
+    local span_id = generate_span_id(self.should_sample)
+
     return setmetatable({
         trace_id = self.trace_id,
-        span_id = generate_span_id(),
+        span_id = span_id,
         parent_id = self.span_id,
         -- If parent was sampled, sample the child
         should_sample = self.should_sample,
@@ -97,7 +111,7 @@ function span_context_methods:clone_with_baggage_item(key, value)
         span_id = self.span_id,
         parent_id = self.parent_id,
         should_sample = self.should_sample,
-        baggage = setmetatable(baggage_copy, baggage_mt),
+        baggage = baggage_copy,
     }, span_context_mt)
 end
 
@@ -108,7 +122,10 @@ end
 -- @treturn string value
 function span_context_methods:get_baggage_item(key)
     checks('table', 'string')
-    return self.baggage and self.baggage[key]
+    if self.baggage == nil then
+        return nil
+    end
+    return self.baggage[key]
 end
 
 --- Get baggage item iterator
@@ -119,7 +136,9 @@ end
 function span_context_methods:each_baggage_item()
     checks('table')
     local baggage = self.baggage
-    if baggage == nil then return function() end end
+    if baggage == nil then
+        return function() end
+    end
     return next, baggage
 end
 

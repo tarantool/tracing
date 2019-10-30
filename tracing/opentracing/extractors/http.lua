@@ -16,6 +16,7 @@ ffi.cdef([[
     void curl_free(void *p);
 ]])
 
+local outlength = ffi.new("int[1]")
 --- URL decodes the given string
 -- See https://curl.haxx.se/libcurl/c/curl_easy_unescape.html
 -- @function url_decode
@@ -27,7 +28,6 @@ local function url_decode(inp)
         return nil
     end
 
-    local outlength = ffi.new("int[1]")
     local unescaped_str = ffi.C.curl_easy_unescape(handle, inp, #inp, outlength)
     ffi.C.curl_easy_cleanup(handle)
     if unescaped_str == nil then
@@ -56,10 +56,8 @@ local function extract(headers)
     local sample = headers["x-b3-sampled"]
     if sample == "1" or sample == "true" then
         sample = true
-    elseif sample == "0" or sample == "false" then
+    else
         sample = false
-    elseif sample ~= nil then
-        sample = nil
     end
 
     -- X-B3-Flags: if it equals '1' then it overrides sampling policy
@@ -87,7 +85,7 @@ local function extract(headers)
         span_id = span_id,
         parent_id = parent_span_id,
         should_sample = sample,
-        baggage = baggage
+        baggage = baggage,
     })
 end
 

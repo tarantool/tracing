@@ -33,7 +33,7 @@ test:test('decorator positive', function(test)
     test:is(nil, d, 'fourth arg is empty')
     test:is(1, #Reporter.spans, 'One span')
     local span = Reporter.spans[1]
-    test:is(nil, span.tags['error'])
+    test:is(nil, span:get_tag('error'))
     Reporter.reset()
 end)
 
