@@ -37,8 +37,8 @@ local function handler(req)
     local span = opentracing.start_span_from_context(ctx, 'print_string')
     span:set_component('publisher')
     span:set_server_kind()
-    span:set_http_method(req.method)
-    span:set_http_path(req.path)
+    span:set_http_method(req:method())
+    span:set_http_path(req:path())
 
     -- Simulate long request processing
     fiber.sleep(3)
