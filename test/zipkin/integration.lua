@@ -15,8 +15,8 @@ local Sampler = {
 
 local base_url ='http://localhost:9411/api/v2/'
 
+local httpc = http_client.new()
 local function healthcheck()
-    local httpc = http_client.new()
     local result = httpc:get(base_url .. '/traces')
     if result.status ~= 200 then
         log.warn('Zipkin is not active on http://localhost:9411/api/v2/. Skip integration tests')
@@ -26,15 +26,16 @@ end
 
 healthcheck()
 
-test:plan(3)
+test:plan(4)
 
 local function log_error(err)
-    log.error(err)
+    log.error('Zipkin reporter error: %s', err)
 end
 
 local function get_trace(trace_id)
-    local httpc = http_client.new()
-    local result = httpc:get(base_url .. '/trace/' .. trace_id)
+    local url = base_url .. 'trace/' .. trace_id
+    log.info('Get trace from %s', url)
+    local result = httpc:get(url)
     local result_body = result.body and json.decode(result.body)
     if result_body == nil or result_body[1] == nil then
         return nil
@@ -53,7 +54,7 @@ end
 test:test('Background reporter', function(test)
     test:plan(2)
     local tracer = ZipkinTracer.new({
-        base_url = base_url .. '/spans',
+        base_url = base_url .. 'spans',
         api_method = 'POST',
         report_interval = 0.2,
         on_error = log_error,
@@ -67,7 +68,7 @@ test:test('Background reporter', function(test)
     })
     span:log('dummy_reporter', 'log ' .. span_name)
     test:ok(span:finish(), 'Successfully finish span. Background report')
-    fiber.sleep(5)
+    fiber.sleep(2)
     ZipkinHandler.stop()
     test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
 end)
@@ -96,7 +97,7 @@ test:test('Several spans', function(test)
     test:plan(child_span_count * 2 + 3)
     local report_interval = 2
     local tracer = ZipkinTracer.new({
-        base_url = base_url .. '/spans',
+        base_url = base_url .. 'spans',
         api_method = 'POST',
         report_interval = report_interval,
         on_error = log_error,
@@ -140,6 +141,45 @@ test:test('Several spans', function(test)
         test:is(context.span_id, trace[i].parentId,
                 ('Parent id of %s is ok'):format(i))
     end
+end)
+
+test:test('Background reporter redefinition', function(test)
+    test:plan(3)
+    local tracer = ZipkinTracer.new({
+        base_url = base_url .. 'spans',
+        api_method = 'POST',
+        report_interval = 1,
+        on_error = log_error,
+    }, Sampler)
+
+    local test_spans_count = 5
+    local span = tracer:start_span('root')
+    for i = 1, test_spans_count do
+        local span_name = 'test_' .. i
+        local child_span = span:start_child_span(span_name)
+        child_span:log('dummy_reporter_' .. i, 'log ' .. span_name)
+        child_span:finish()
+    end
+    span:finish()
+
+    -- Redefine tracer
+    tracer = ZipkinTracer.new({
+        base_url = base_url .. 'spans',
+        api_method = 'POST',
+        report_interval = 0.1,
+        on_error = log_error,
+    }, Sampler)
+
+    local trace = get_trace(span:context().trace_id)
+    test:isnt(trace, nil, 'Trace was successfully saved')
+    test:ok(#trace == (test_spans_count + 1), "Spans were not lost")
+
+    span = tracer:start_span('new_tracer')
+    span:finish()
+    fiber.sleep(1)
+    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
+
+    ZipkinHandler.stop()
 end)
 
 os.exit(test:check() and 0 or 1)

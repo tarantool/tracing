@@ -71,8 +71,13 @@ local function format_span(span)
     }
 end
 
+local DEFAULT_HTTP_TIMEOUT = 5
 local function send_traces(self, traces)
-    local client = httpc.new()
+    if self._client == nil then
+        self._client = httpc.new()
+    end
+    local client = self._client
+
     local ok, data = pcall(json.encode, traces)
     if not ok then
         self.on_error(data)
@@ -80,12 +85,13 @@ local function send_traces(self, traces)
     end
 
     local headers = {['Content-Type'] = 'application/json'}
-    local ok, result = pcall(client.request, client, self.api_method, self.base_url, data, { headers = headers })
+    local ok, result = pcall(client.request, client, self.api_method, self.base_url, data,
+            { headers = headers, timeout = DEFAULT_HTTP_TIMEOUT })
     if not ok then
         self.on_error(result)
         return
     end
-    if 200 > result.status or result.status >= 300 then
+    if result.status < 200 or 300 <= result.status then
         self.on_error(('%s [%s] (%s)'):format(result.reason, result.status, result.body))
     end
 end
