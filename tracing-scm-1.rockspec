@@ -43,5 +43,5 @@ build = {
 		version = 'scm-1',
 	},
 	install_pass = false,
-	copy_directories = {'doc', 'example'},
+	copy_directories = {'doc', 'examples'},
 }

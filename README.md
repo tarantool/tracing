@@ -454,5 +454,3 @@ os.exit(0)
 ```
 
 * Check results on [http://localhost:9411/zipkin](http://localhost:9411/zipkin)
-
-
