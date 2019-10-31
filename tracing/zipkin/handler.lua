@@ -3,6 +3,7 @@ local fiber = require('fiber')
 local Handler = {}
 
 local DEFAULT_FLUSH_INTERVAL = 60
+local WAIT_FOR_CANCEL_TIMEOUT = 5
 
 local worker
 local force_flush_cond = fiber.cond()
@@ -19,16 +20,16 @@ function Handler.start(tracer)
                 reporter:send_traces(traces)
             end
             if wait_exit_chan:has_readers() then
-                wait_exit_chan:put({})
+                wait_exit_chan:put({}, WAIT_FOR_CANCEL_TIMEOUT)
             end
             local timeout = reporter.report_interval or DEFAULT_FLUSH_INTERVAL
+            fiber.testcancel()
             force_flush_cond:wait(timeout)
         end
     end)
     worker:name('zipkin_handler')
 end
 
-local WAIT_FOR_CANCEL_TIMEOUT = 5
 function Handler.stop()
     if worker ~= nil and worker:status() ~= 'dead' then
         force_flush_cond:signal()

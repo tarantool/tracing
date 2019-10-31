@@ -26,7 +26,7 @@ end
 
 healthcheck()
 
-test:plan(4)
+test:plan(3)
 
 local function log_error(err)
     log.error('Zipkin reporter error: %s', err)
@@ -141,45 +141,6 @@ test:test('Several spans', function(test)
         test:is(context.span_id, trace[i].parentId,
                 ('Parent id of %s is ok'):format(i))
     end
-end)
-
-test:test('Background reporter redefinition', function(test)
-    test:plan(3)
-    local tracer = ZipkinTracer.new({
-        base_url = base_url .. 'spans',
-        api_method = 'POST',
-        report_interval = 1,
-        on_error = log_error,
-    }, Sampler)
-
-    local test_spans_count = 5
-    local span = tracer:start_span('root')
-    for i = 1, test_spans_count do
-        local span_name = 'test_' .. i
-        local child_span = span:start_child_span(span_name)
-        child_span:log('dummy_reporter_' .. i, 'log ' .. span_name)
-        child_span:finish()
-    end
-    span:finish()
-
-    -- Redefine tracer
-    tracer = ZipkinTracer.new({
-        base_url = base_url .. 'spans',
-        api_method = 'POST',
-        report_interval = 0.1,
-        on_error = log_error,
-    }, Sampler)
-
-    local trace = get_trace(span:context().trace_id)
-    test:isnt(trace, nil, 'Trace was successfully saved')
-    test:ok(#trace == (test_spans_count + 1), "Spans were not lost")
-
-    span = tracer:start_span('new_tracer')
-    span:finish()
-    fiber.sleep(1)
-    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
-
-    ZipkinHandler.stop()
 end)
 
 os.exit(test:check() and 0 or 1)
