@@ -99,7 +99,7 @@ local span = tracer:start_span('example')
 span:finish()
 ```
 
-## Example
+## HTTP Example
 
 This example is a Lua port of
 [Go OpenTracing tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/go).
@@ -454,3 +454,131 @@ os.exit(0)
 ```
 
 * Check results on [http://localhost:9411/zipkin](http://localhost:9411/zipkin)
+
+## Tarantool Cartridge Example
+
+Opentracing could be used with [Tarantool Cartridge](https://github.com/tarantool/cartridge).
+
+This example is pretty similar to previous. We will have several roles
+that communicate via rpc_call.
+
+### Basics
+
+Before describing let's define some restrictions of "tracing in Tarantool".
+Remote communications between tarantools are made using `net.box` module.
+It allows to send only primitive types (except functions) and doesn't have
+containers for request context (as headers in HTTP).
+Then you should transfer span context explicitly as raw table as additional argument
+in your function.
+
+```lua
+-- Create span
+local span = opentracing.start_span('span')
+
+-- Create context carrier
+local rpc_context = {}
+opentracing.map_inject(span:context(), rpc_context)
+
+-- Pass context explicitly as additional argument
+local res, err = cartridge.rpc_call('role', 'fun', {rpc_context, ...})
+```
+
+### Using inside roles
+
+The logic of tracing fits into a separate role.
+Let's define it:
+
+```lua
+local opentracing = require('opentracing')
+local zipkin = require('zipkin.tracer')
+
+local log = require('log')
+
+-- config = {
+--     base_url = 'localhost:9411/api/v2/spans',
+--     api_method = 'POST',
+--     report_interval = 5,    -- in seconds
+--     spans_limit = 1e4,      -- amount of spans that could be stored locally
+-- }
+
+local function apply_config(config)
+    -- sample all requests
+    local sampler = { sample = function() return true end }
+
+    local tracer = zipkin.new({
+        base_url = config.base_url,
+        api_method = config.api_method,
+        report_interval = config.report_interval,
+        spans_limit = config.spans_limit,
+        on_error = function(err) log.error('zipkin error: %s', err) end,
+    }, sampler)
+
+    -- Setup global tracer for easy access from another modules
+    opentracing.set_global_tracer(tracer)
+
+    return true
+end
+
+return {
+    role_name = 'tracing',
+    apply_config = apply_config,
+    dependencies = {},
+}
+```
+
+Then you can use this role as dependency:
+```lua
+local opentracing = require('opentracing')
+local membership = require('membership')
+
+local role_name = 'formatter'
+local template = 'Hello, %s'
+
+local service_uri = ('%s@%s'):format(role_name, membership.myself().uri)
+
+local function format(ctx, input)
+    -- Extract tracing context from request context
+    local context = opentracing.map_extract(ctx)
+    local span = opentracing.start_span_from_context(context, 'format')
+    span:set_component(service_uri)
+
+    local result, err
+    if input == '' then
+        err = 'Empty string'
+        span:set_error(err)
+    else
+        result = template:format(input)
+    end
+
+    span:finish()
+
+    return result, err
+end
+
+local function init(_)
+    return true
+end
+
+local function stop()
+end
+
+local function validate_config(_, _)
+    return true
+end
+
+local function apply_config(_, _)
+    return true
+end
+
+return {
+    format = format,
+
+    role_name = role_name,
+    init = init,
+    stop = stop,
+    validate_config = validate_config,
+    apply_config = apply_config,
+    -- Setup tracing role as dependency
+    dependencies = {'app.roles.tracing'},
+}
+```
