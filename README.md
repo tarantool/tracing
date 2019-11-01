@@ -22,7 +22,7 @@
 
 ## OpenTracing
 
-This library is a Tarantool platform API for OpenTracing
+This library is a Tarantool platform API for OpenTracing.
 
 ### Required Reading
 
@@ -35,6 +35,14 @@ it's helpful to be familiar with the [OpenTracing project](https://opentracing.i
   - All timestamps are in microseconds
 
 ### Span
+
+> The “span” is the primary building block of a distributed trace,
+representing an individual unit of work done in a distributed system.
+Traces in OpenTracing are defined implicitly by their Spans.
+In particular, a Trace can be thought of as a directed acyclic graph
+(DAG) of Spans, where the edges between Spans are called References.
+
+
 ```lua
 local opentracing_span = require('opentracing.span')
 -- tracer - External tracer
@@ -45,6 +53,9 @@ local span = opentracing_span.new(tracer, context, name, start_timestamp)
 ```
 
 ### SpanContext
+
+> The SpanContext carries data across process boundaries.
+
 ```lua
 local opentracing_span_context = require('opentracing.span_context')
 -- trace_id (optional) - Trace ID (by default generates automatically)
@@ -62,6 +73,11 @@ local context = opentracing_span_context.new({
 ```
 
 ### Tracer
+
+> The Tracer interface creates Spans and understands
+how to Inject (serialize) and Extract (deserialize)
+their metadata across process boundaries.
+
 An interface for custom tracers
 ```lua
 local opentracing_tracer = require('opentracing.tracer')
@@ -77,12 +93,26 @@ local tracer = opentracing_tracer.new(reporter, sampler)
 local zipkin = require('zipkin.tracer')
 local opentracing = require('opentracing')
 
+-- Create client to Zipkin and set it global for easy access from any part of app
 local tracer = zipkin.new(config)
 opentracing.set_global_tracer(tracer)
 
+-- Create and manage spans manually
 local span = opentracing.start_span('root span')
-opentracing.trace_with_context('child span 1', span:context(), fun1, arg1)
-opentracing.trace_with_context('child span 2', span:context(), fun2, arg2)
+-- ... your code ...
+span:finish()
+
+-- Simple wrappers via user's function
+
+-- Creates span before function call and finishes it after
+local result = opentracing.trace('one span', func, ...)
+
+-- Wrappers with context passing
+local span = opentracing.start_span('root span')
+
+-- Pass your function as third argument and then its arguments
+opentracing.trace_with_context('child span 1', span:context(), func1, ...)
+opentracing.trace_with_context('child span 2', span:context(), func2, ...)
 span:finish()
 ```
 
