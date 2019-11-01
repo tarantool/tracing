@@ -2,37 +2,16 @@
 -- https://github.com/openzipkin/b3-propagation
 -- https://www.envoyproxy.io/docs/envoy/v1.6.0/configuration/http_conn_man/headers
 -- Semantic conventions: https://opentracing.io/specification/conventions/
-local ffi = require('ffi')
 local checks = require('checks')
 
-ffi.cdef([[
-    typedef void CURL;
-    CURL *curl_easy_init(void);
-    void curl_easy_cleanup(CURL *handle);
-    char *curl_easy_escape(CURL *handle, const char *string, int length);
-    void curl_free(void *p);
-]])
-
---- URL encodes the given string
--- See https://curl.haxx.se/libcurl/c/curl_easy_escape.html
--- @function url_encode
--- @string       inp    the string
--- @returns      result string or nil
 local function url_encode(inp)
-    local handle = ffi.C.curl_easy_init()
-    if not handle then
-        return nil
-    end
-
-    local escaped_str = ffi.C.curl_easy_escape(handle, inp, #inp)
-    ffi.C.curl_easy_cleanup(handle)
-    if escaped_str == nil then
-        return nil
-    end
-
-    local out = ffi.string(escaped_str)
-    ffi.C.curl_free(escaped_str)
-    return out
+    if inp ~= nil then
+        inp = string.gsub(inp, "\n", "\r\n")
+        inp = string.gsub(inp, "([^%w ])",
+            function(c) return string.format ("%%%02X", string.byte(c)) end)
+        inp = string.gsub(inp, " ", "+")
+   end
+   return inp
 end
 
 local function inject(context, headers)

@@ -3,40 +3,16 @@
 -- https://www.envoyproxy.io/docs/envoy/v1.6.0/configuration/http_conn_man/headers
 -- Semantic conventions: https://opentracing.io/specification/conventions/
 
-local ffi = require('ffi')
 local checks = require('checks')
 local span_context = require('opentracing.span_context')
 local carrier_validate = require('opentracing.extractors.validate')
 
-ffi.cdef([[
-    typedef void CURL;
-    CURL *curl_easy_init(void);
-    void curl_easy_cleanup(CURL *handle);
-    char *curl_easy_unescape(CURL *handle, const char *string, int length, int *outlength);
-    void curl_free(void *p);
-]])
-
-local outlength = ffi.new("int[1]")
---- URL decodes the given string
--- See https://curl.haxx.se/libcurl/c/curl_easy_unescape.html
--- @function url_decode
--- @string       inp    the string
--- @returns      result string or nil
 local function url_decode(inp)
-    local handle = ffi.C.curl_easy_init()
-    if not handle then
-        return nil
+    if inp ~= nil then
+        inp = string.gsub(inp, '%%(%x%x)',
+                function(hex) return string.char(tonumber(hex,16)) end )
     end
-
-    local unescaped_str = ffi.C.curl_easy_unescape(handle, inp, #inp, outlength)
-    ffi.C.curl_easy_cleanup(handle)
-    if unescaped_str == nil then
-        return nil
-    end
-
-    local out = ffi.string(unescaped_str, outlength[0])
-    ffi.C.curl_free(unescaped_str)
-    return out
+    return inp
 end
 
 local function extract(headers)
