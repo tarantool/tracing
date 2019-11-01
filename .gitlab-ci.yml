@@ -7,9 +7,9 @@ build:
   stage: build
   tags:
     - docker
-  image: centos:7
+  image: centos:8
   variables:
-    BUNDLE_VERSION: "1.10.3-16-g3245f67"
+    BUNDLE_VERSION: "1.10.4-7-g0df74ff"
 
   before_script:
     - echo "Using tarantool-enterprise-bundle ${BUNDLE_VERSION}"
@@ -17,10 +17,11 @@ build:
     - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - export PATH=$PWD/tarantool-enterprise:$PATH
-    - yum -y install git gcc make unzip which lua-devel luarocks java-1.8.0-openjdk
+    - yum -y install java-1.8.0-openjdk
+    - yum -y install git gcc make unzip which
     - curl -sSL https://zipkin.apache.org/quickstart.sh | bash -s
     - tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
-    - tarantoolctl rocks install https://raw.githubusercontent.com/mpeterv/luacheck/master/luacheck-dev-1.rockspec
+    - tarantoolctl rocks install luacheck 0.25.0
     - export PATH=.rocks/bin:$PATH
   script:
     - tarantoolctl rocks make
@@ -36,6 +37,25 @@ build:
       - doc/
       - release/
       - release-doc/
+
+build-2.x-centos:
+  stage: build
+  tags:
+    - docker
+  image: tarantool/tarantool:2.x-centos7
+
+  before_script:
+    - yum -y install gcc curl git make unzip which java-1.8.0-openjdk
+    - curl -sSL https://zipkin.apache.org/quickstart.sh | bash -s
+    - tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
+    - tarantoolctl rocks install luacheck 0.25.0
+    - export PATH=.rocks/bin:$PATH
+  script:
+    - tarantoolctl rocks make
+    - java -jar zipkin.jar &
+    - sleep 10
+    - make lint
+    - make unit
 
 publish:
   stage: publish
