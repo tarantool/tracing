@@ -1,11 +1,26 @@
-# Tracing for Tarantool Enterprise
+# Tracing for Tarantool
 
 `Tracing` module for Tarantool includes the following parts:
 
 * OpenTracing API
 * Zipkin tracer
 
-## Opentracing
+## Table of contents
+
+* [OpenTracing](#opentracing)
+    * [Required Reading](#required-reading)
+    * [Conventions](#conventions)
+    * [Span](#span)
+    * [SpanContext](#spancontext)
+    * [Tracer](#tracer)
+    * [Basic usage](#basic-usage)
+* [Zipkin](#zipkin)
+    * [Basic usage](#basic-usage)
+* [Examples](#examples)
+    * [HTTP](#http)
+    * [Cartridge](#tarantool-cartridge)
+
+## OpenTracing
 
 This library is a Tarantool platform API for OpenTracing
 
@@ -99,12 +114,14 @@ local span = tracer:start_span('example')
 span:finish()
 ```
 
-## HTTP Example
+## Examples
+
+### HTTP
 
 This example is a Lua port of
 [Go OpenTracing tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/go).
 
-### Description
+#### Description
 
 The example demonstrates trace propagation through two services:
 `formatter` that formats the source string to "Hello, world"
@@ -115,7 +132,7 @@ Add data to these services via HTTP; initially it sends `client`.
 *Note: example requires http rock (version >= 2.0.1)*
 *Install it using `tarantoolctl rocks install http 2.0.1`*
 
-### How to run
+#### How to run
 
 * Create `docker-compose.zipkin.yml`
 
@@ -455,14 +472,14 @@ os.exit(0)
 
 * Check results on [http://localhost:9411/zipkin](http://localhost:9411/zipkin)
 
-## Tarantool Cartridge Example
+### Tarantool Cartridge
 
 Opentracing could be used with [Tarantool Cartridge](https://github.com/tarantool/cartridge).
 
 This example is pretty similar to previous. We will have several roles
 that communicate via rpc_call.
 
-### Basics
+#### Basics
 
 Before describing let's define some restrictions of "tracing in Tarantool".
 Remote communications between tarantools are made using `net.box` module.
@@ -483,7 +500,7 @@ opentracing.map_inject(span:context(), rpc_context)
 local res, err = cartridge.rpc_call('role', 'fun', {rpc_context, ...})
 ```
 
-### Using inside roles
+#### Using inside roles
 
 The logic of tracing fits into a separate role.
 Let's define it:
