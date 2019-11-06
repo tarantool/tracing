@@ -2,13 +2,13 @@ package = 'tracing'
 version = 'scm-1'
 
 source = {
-	url = 'git+ssh://git@gitlab.com/tarantool/enterprise/tracing.git',
+	url = 'git://github.com/tarantool/tracing.git',
 	branch = 'master',
 }
 
 description = {
 	summary = 'Lua platform API for OpenTracing',
-	homepage = 'https://gitlab.com/tarantool/enterprise/tracing',
+	homepage = 'https://github.com/tarantool/tracing.git',
 	license = 'BSD',
 }
 
