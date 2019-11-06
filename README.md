@@ -1,5 +1,7 @@
 # Tracing for Tarantool
 
+![tracing-img](https://user-images.githubusercontent.com/8830475/68295738-17abe800-00a4-11ea-855f-d46589b89bed.png)
+
 `Tracing` module for Tarantool includes the following parts:
 
 * OpenTracing API
@@ -148,8 +150,12 @@ span:finish()
 
 ### HTTP
 
+![http-example-img](https://user-images.githubusercontent.com/8830475/68296113-de27ac80-00a4-11ea-844a-20f798d3f5d8.png)
+
 This example is a Lua port of
 [Go OpenTracing tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/go).
+
+*Complete source code see [here](/examples/http)*
 
 #### Description
 
@@ -502,7 +508,12 @@ os.exit(0)
 
 * Check results on [http://localhost:9411/zipkin](http://localhost:9411/zipkin)
 
+
 ### Tarantool Cartridge
+
+![cartridge-example-img](https://user-images.githubusercontent.com/8830475/68297520-2e543e00-00a8-11ea-9517-f9567dc3c808.png)
+
+*Complete source code see [here](/examples/cartridge)*
 
 Opentracing could be used with [Tarantool Cartridge](https://github.com/tarantool/cartridge).
 
