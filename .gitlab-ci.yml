@@ -1,7 +1,6 @@
 stages:
   - build
   - publish
-  - website
 
 build:
   stage: build
@@ -69,19 +68,3 @@ publish:
   script:
     - aws --endpoint-url "${AWS_S3_ENDPOINT_URL}" s3 cp release/*.all.rock "s3://packages/rocks/"
     - aws --endpoint-url "${AWS_S3_ENDPOINT_URL}" s3 cp --recursive release-doc/ "s3://packages/rocks-doc/"
-
-website:
-  stage: website
-  tags:
-    - heroku
-    - mcs
-  script:
-    - docker build -t tracing-doc .
-    - docker run --rm
-      -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-      -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-      tracing-doc
-      sh -c "aws s3 cp configs/tracing s3://tarantool-io-doc-builds/tracing --endpoint-url=$AWS_S3_ENDPOINT_URL --recursive"
-    - bash trigger_update.sh
-  only:
-    - master
