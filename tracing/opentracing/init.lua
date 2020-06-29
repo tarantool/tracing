@@ -53,6 +53,16 @@ function opentracing.start_span_from_context(context, name)
     return span.new(opentracing.tracer, child_context, name)
 end
 
+local function trace_tail(trace_span, status, ...)
+    trace_span:finish()
+    if not status then
+        local err = ...
+        trace_span:set_tag('error', err)
+        return nil, err
+    end
+    return ...
+end
+
 --- Trace function with context by global tracer
 --   This function starts span from global tracer and finishes it after execution
 -- @function trace_with_context
@@ -78,14 +88,7 @@ end
 function opentracing.trace_with_context(name, ctx, fun, ...)
     checks('string', '?table', 'function')
     local trace_span = opentracing.start_span_from_context(ctx, name)
-    local result = { pcall(fun, ...) }
-    trace_span:finish()
-    if not result[1] then
-        local err = result[2]
-        trace_span:set_tag('error', err)
-        return nil, err
-    end
-    return unpack(result, 2, table.maxn(result))
+    return trace_tail(trace_span, pcall(fun, ...))
 end
 
 --- Trace function by global tracer
@@ -102,14 +105,7 @@ end
 function opentracing.trace(name, fun, ...)
     checks('string', 'function')
     local trace_span = opentracing.start_span(name)
-    local result = { pcall(fun, ...) }
-    trace_span:finish()
-    if not result[1] then
-        local err = result[2]
-        trace_span:set_tag('error', err)
-        return nil, err
-    end
-    return unpack(result, 2, table.maxn(result))
+    return trace_tail(trace_span, pcall(fun, ...))
 end
 
 -- Aliases for useful and available functions
