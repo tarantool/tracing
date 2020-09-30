@@ -35,6 +35,7 @@ local ok, err = cartridge.cfg({
         'app.roles.server',
         'app.roles.printer',
         'app.roles.formatter',
+        'app.roles.tracing',
     },
     cluster_cookie = 'tracing-for-cartridge-cluster-cookie',
 })

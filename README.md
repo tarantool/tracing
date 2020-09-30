@@ -543,7 +543,7 @@ local res, err = cartridge.rpc_call('role', 'fun', {rpc_context, ...})
 
 #### Using inside roles
 
-The logic of tracing fits into a separate role.
+The logic of tracing fits into a separate permanent role.
 Let's define it:
 
 ```lua
@@ -581,6 +581,10 @@ return {
     role_name = 'tracing',
     apply_config = apply_config,
     dependencies = {},
+    -- Role will be hidden from WebUI
+    -- but constantly enabled on all instances,
+    -- no need to specify it as dependency for other roles
+    permanent = true,
 }
 ```
 
@@ -636,7 +640,6 @@ return {
     stop = stop,
     validate_config = validate_config,
     apply_config = apply_config,
-    -- Setup tracing role as dependency
-    dependencies = {'app.roles.tracing'},
+    dependencies = {},
 }
 ```
