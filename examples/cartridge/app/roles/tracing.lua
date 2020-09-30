@@ -61,4 +61,5 @@ return {
     validate_config = validate_config,
     apply_config = apply_config,
     dependencies = {},
+    permanent = true,
 }

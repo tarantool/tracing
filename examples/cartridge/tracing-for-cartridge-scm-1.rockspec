@@ -6,8 +6,7 @@ source  = {
 
 dependencies = {
     'tarantool',
-    'luatest == 0.3.0-1',
-    'cartridge == 1.2.0-1',
+    'cartridge == 2.3.0-1',
     'tracing',
 }
 build = {
