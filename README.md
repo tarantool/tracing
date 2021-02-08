@@ -372,6 +372,7 @@ function app.init()
     local router = http_router.new()
         :route({ path = '/print', method = 'GET' }, handler)
     httpd:set_router(router)
+    httpd:start()
 end
 
 app.init()
