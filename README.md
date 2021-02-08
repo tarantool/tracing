@@ -181,7 +181,7 @@ version: '3.5'
 
 services:
   storage:
-    image: openzipkin/zipkin-mysql
+    image: openzipkin/zipkin-mysql:1
     container_name: mysql
     networks:
       - zipkin
@@ -191,7 +191,7 @@ services:
   # The zipkin process services the UI, and also exposes a POST endpoint that
   # instrumentation can send trace data to. Scribe is disabled by default.
   zipkin:
-    image: openzipkin/zipkin
+    image: openzipkin/zipkin:1
     container_name: zipkin
     networks:
       - zipkin
@@ -213,7 +213,7 @@ services:
   #
   # For more details, see https://github.com/openzipkin/docker-zipkin-dependencies
   dependencies:
-    image: openzipkin/zipkin-dependencies
+    image: openzipkin/zipkin-dependencies:1
     container_name: dependencies
     entrypoint: crond -f
     networks:
