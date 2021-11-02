@@ -2,7 +2,7 @@ package = 'tracing'
 version = 'scm-1'
 
 source = {
-	url = 'git://github.com/tarantool/tracing.git',
+	url = 'git+https://github.com/tarantool/tracing.git',
 	branch = 'master',
 }
 
