@@ -1,15 +1,12 @@
 #!/usr/bin/env tarantool
 
-
-local ok, http_server = pcall(require,'http.server')
-
+local ok, http_server = pcall(require, 'http.server')
 if not ok then
-    print('Example requires http module (version >= 2.0.1)')
-    print('Install using "tarantoolctl rocks install http 2.0.1"')
+    print('Example requires http module (version >= 1.2.0)')
+    print('Install using "tarantoolctl rocks install http 1.2.0"')
     os.exit(1)
 end
 
-local http_router = require('http.router')
 local fiber = require('fiber')
 local log = require('log')
 local zipkin = require('zipkin.tracer')
@@ -25,7 +22,7 @@ local HOST = '0.0.0.0'
 local PORT = '33303'
 
 local function handler(req)
-    local ctx, err = opentracing.http_extract(req:headers())
+    local ctx, err = opentracing.http_extract(req.headers)
 
     if ctx == nil then
         local resp = req:render({ text = err })
@@ -61,8 +58,7 @@ function app.init()
     opentracing.set_global_tracer(tracer)
 
     local httpd = http_server.new(HOST, PORT)
-    local router = http_router.new():route({ path = '/print', method = 'GET' }, handler)
-    httpd:set_router(router)
+    httpd:route({ path = '/print', method = 'GET' }, handler)
     httpd:start()
 end
 
