@@ -23,6 +23,7 @@ build = {
 	install = {
 		lua = {
 			['opentracing'] = 'tracing/opentracing/init.lua',
+			['opentracing.version'] = 'tracing/version.lua',
 			['opentracing.span'] = 'tracing/opentracing/span.lua',
 			['opentracing.span_context'] = 'tracing/opentracing/span_context.lua',
 			['opentracing.tracer'] = 'tracing/opentracing/tracer.lua',
@@ -37,6 +38,7 @@ build = {
 			['zipkin.reporter'] = 'tracing/zipkin/reporter.lua',
 			['zipkin.tracer'] = 'tracing/zipkin/tracer.lua',
 			['zipkin.bounded_queue'] = 'tracing/zipkin/bounded_queue.lua',
+			['zipkin.version'] = 'tracing/version.lua',
 		},
 	},
 	build_variables = {

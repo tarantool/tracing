@@ -43,4 +43,8 @@ function Tracer.new(config, sampler)
     return self
 end
 
+-- @tfield string _VERSION
+--  Module version.
+Tracer._VERSION = require('zipkin.version')
+
 return Tracer
