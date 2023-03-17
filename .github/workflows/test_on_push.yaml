@@ -31,15 +31,19 @@ jobs:
   run-tests-ce:
     strategy:
       matrix:
-        tarantool-version: ["1.10", "2.8"]
+        tarantool-version: ["1.10", "2.10"]
       fail-fast: false
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@master
+
+      - name: Setup Tarantool CE
+        uses: tarantool/setup-tarantool@v2
+        with:
+          tarantool-version: ${{ matrix.tarantool-version }}
+
       - name: Install requirements for community
         run: |
-          curl -L https://tarantool.io/installer.sh | sudo VER=${{ matrix.tarantool-version }} bash
-          sudo apt install -y tarantool-dev
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
