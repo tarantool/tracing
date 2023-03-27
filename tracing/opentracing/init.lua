@@ -114,4 +114,8 @@ opentracing.map_extract = extractors.map
 opentracing.http_inject = injectors.http
 opentracing.map_inject = injectors.map
 
+-- @tfield string _VERSION
+--  Module version.
+opentracing._VERSION = require('opentracing.version')
+
 return opentracing
