@@ -166,7 +166,7 @@ and `publisher` that prints it in the console.
 Add data to these services via HTTP; initially it sends `client`.
 
 *Note: example requires http rock (version >= 1.2.0)*
-*Install it using `tarantoolctl rocks install http 1.2.0`*
+*Install it using `tt rocks install http 1.2.0`*
 
 #### How to run
 
