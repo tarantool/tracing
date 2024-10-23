@@ -47,6 +47,8 @@ jobs:
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
+          tarantoolctl rocks install luacov 0.13.0
+          tarantoolctl rocks install luacov-reporters 0.1.0
           export PATH=.rocks/bin:$PATH
           tarantoolctl rocks make
 
