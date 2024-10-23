@@ -25,8 +25,9 @@ unit:
 	TEST_RESULT=0; \
 	for f in $(TEST_FILES); do \
 		echo -e '\nExecuting test '$(basename $$f)'...'; \
-		$$f; \
-		let TEST_RESULT=$$TEST_RESULT+$$?; \
+		tarantool -e "require('luacov.runner')(); dofile('$$f')" || TEST_RESULT=$$?; \
 		[ $$TEST_RESULT -gt 0 ] && exit $$TEST_RESULT; \
 	done; \
+	luacov; \
+	luacov-console; \
 	exit $$TEST_RESULT

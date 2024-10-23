@@ -47,17 +47,31 @@ jobs:
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
+          tarantoolctl rocks install luacov 0.13.0
+          tarantoolctl rocks install luacov-reporters 0.1.0
           export PATH=.rocks/bin:$PATH
           tarantoolctl rocks make
+
       - name: Run linter
         run: |
           .rocks/bin/luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
           .rocks/bin/luacheck ./test --config=.luacheckrc --no-redefined --no-unused-args
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '17'
+
+      - name: Check Java version
+        run: java -version
+
       - name: Run tests
         run: |
           java -jar zipkin.jar &
           sleep 10
           make unit
+
       - name: Build doc
         run: .rocks/bin/ldoc -t "$ROCK_NAME-${version}" -p "$ROCK_NAME (${version})" --all .
 
