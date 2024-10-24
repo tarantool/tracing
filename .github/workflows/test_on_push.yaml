@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Setup Tarantool CE
-        uses: tarantool/setup-tarantool@v3
+        uses: tarantool/setup-tarantool@v2
         with:
           tarantool-version: ${{ matrix.tarantool-version }}
 
@@ -57,7 +57,7 @@ jobs:
       - name: Run tests
         run: |
           java -jar zipkin.jar &
-          sleep 10
+          sleep 20
           make unit
       - name: Build doc
         run: .rocks/bin/ldoc -t "$ROCK_NAME-${version}" -p "$ROCK_NAME (${version})" --all .
