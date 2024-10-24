@@ -1,16 +1,13 @@
-#!/usr/bin/env tarantool
+local t = require('luatest')
+local g = t.group()
 
-local test = require('tap').test('Zipkin integration')
 local fiber = require('fiber')
 local json = require('json')
 local log = require('log')
 local http_client = require('http.client')
-local ZipkinTracer = require('zipkin.tracer')
-local ZipkinHandler = require('zipkin.handler')
+local ZipkinTracer = require('tracing.zipkin.tracer')
+local ZipkinHandler = require('tracing.zipkin.handler')
 
-local Sampler = {
-    sample = function() return true end,
-}
 
 local base_url ='http://localhost:9411/api/v2/'
 
@@ -18,14 +15,9 @@ local httpc = http_client.new()
 local function healthcheck()
     local result = httpc:get(base_url .. '/traces')
     if result.status ~= 200 then
-        log.warn('Zipkin is not active on http://localhost:9411/api/v2/. Skip integration tests')
-        os.exit(0)
+        error('Zipkin is not active on http://localhost:9411/api/v2/. Skip integration tests')
     end
 end
-
-healthcheck()
-
-test:plan(1)
 
 local function log_error(err)
     log.error('Zipkin reporter error: %s', err)
@@ -50,8 +42,14 @@ local function check_trace_id(trace_id)
     return trace[1]['traceId'] == trace_id
 end
 
-test:test('Background reporter redefinition', function(test)
-    test:plan(3)
+g.test_background_reporter_redefinition = function(test)
+    healthcheck()
+
+    local Sampler = {
+        sample = function() return true end,
+    }
+
+
     local tracer = ZipkinTracer.new({
         base_url = base_url .. 'spans',
         api_method = 'POST',
@@ -80,15 +78,13 @@ test:test('Background reporter redefinition', function(test)
     fiber.sleep(1) -- Wait for zipkin internal processes
 
     local trace = get_trace(span:context().trace_id)
-    test:isnt(trace, nil, 'Trace was successfully saved')
-    test:is(#trace, test_spans_count + 1, "Spans were not lost")
+    t.assert_not_equals(trace, nil, 'Trace was successfully saved')
+    t.assert_equals(#trace, test_spans_count + 1, "Spans were not lost")
 
     span = tracer:start_span('new_tracer')
     span:finish()
     fiber.sleep(1)
-    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
+    t.assert(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
 
     ZipkinHandler.stop()
-end)
-
-os.exit(test:check() and 0 or 1)
+end

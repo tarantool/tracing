@@ -1,24 +1,20 @@
-#!/usr/bin/env tarantool
+local t = require('luatest')
 
-local tap = require('tap')
-local test = tap.test('opentracing.tracer')
+local g = t.group()
 
-test:plan(13)
-local opentracing_span_context = require("opentracing.span_context")
-local opentracing_tracer = require("opentracing.tracer")
-local new_tracer = opentracing_tracer.new
+local opentracing_span_context = require("tracing.opentracing.span_context")
+local opentracing_tracer = require("tracing.opentracing.tracer")
 
-test:test("doesn't allow constructing span without a name", function(test)
-    test:plan(1)
-    local tracer = new_tracer()
-    local ok, _ = pcall(function()
-        tracer:start_span(nil)
-    end)
-    test:ok(not ok)
+g.before_all(function ()
+    g.new_tracer = opentracing_tracer.new
 end)
 
-test:test("calls sampler for root traces", function(test)
-    test:plan(1)
+g.test_fail_constructing_span_without_name = function()
+    local tracer = g.new_tracer()
+    t.assert_error(tracer.start_span, tracer)
+end
+
+g.test_call_sampler_for_root_traces = function()
     local sampler_arg
     local mock_sampler = {
         sample = function(_, arg)
@@ -26,13 +22,12 @@ test:test("calls sampler for root traces", function(test)
             return false
         end,
     }
-    local tracer = new_tracer(nil, mock_sampler)
+    local tracer = g.new_tracer(nil, mock_sampler)
     tracer:start_span("foo")
-    test:is(sampler_arg, "foo")
-end)
+    t.assert_equals(sampler_arg, "foo")
+end
 
-test:test("takes returned sampler tags into account", function(test)
-    test:plan(2)
+g.test_take_returned_sampler_tags_into_account = function()
     local sampler_arg
     local mock_sampler = {
         sample = function(_, arg)
@@ -42,19 +37,18 @@ test:test("takes returned sampler tags into account", function(test)
             }
         end,
     }
-    local tracer = new_tracer(nil, mock_sampler)
+    local tracer = g.new_tracer(nil, mock_sampler)
     local span = tracer:start_span("foo")
-    test:is(sampler_arg, "foo")
+    t.assert_equals(sampler_arg, "foo")
     local tags = {}
     for k, v in span:each_tag() do
         tags[k] = v
     end
 
-    test:is_deeply({["sampler.type"] = "mock"}, tags)
-end)
+    t.assert_equals({["sampler.type"] = "mock"}, tags)
+end
 
-test:test("calls reporter at end of span", function(test)
-    test:plan(2)
+g.test_call_reporter_at_end_of_span = function()
     local sampler_arg
     local mock_sampler = {
         sample = function(_, arg)
@@ -66,16 +60,15 @@ test:test("calls reporter at end of span", function(test)
     local mock_reporter = {
         report = function(_, arg) reporter_arg = arg end
     }
-    local tracer = new_tracer(mock_reporter, mock_sampler)
+    local tracer = g.new_tracer(mock_reporter, mock_sampler)
     local span = tracer:start_span("foo")
-    test:is(sampler_arg, 'foo')
+    t.assert_equals(sampler_arg, 'foo')
     span:finish()
-    test:is_deeply(reporter_arg, span)
-end)
+    t.assert_equals(reporter_arg, span)
+end
 
-test:test("allows passing in tags", function(test)
-    test:plan(1)
-    local tracer = new_tracer()
+g.test_allows_passing_in_tags = function()
+    local tracer = g.new_tracer()
     local tags = {
         ["http.method"] = "GET",
         ["http.url"] = "https://example.com/",
@@ -87,38 +80,33 @@ test:test("allows passing in tags", function(test)
     for k, v in span:each_tag() do
         seen[k] = v
     end
-    test:is_deeply(tags, seen)
-end)
+    t.assert_equals(tags, seen)
+end
 
-test:test("allows passing span as a child_of", function(test)
-    local tracer = new_tracer()
+g.test_allows_passing_span_as_child_of = function()
+    local tracer = g.new_tracer()
     local span1 = tracer:start_span("foo")
     tracer:start_span("bar", {
         child_of = span1
     })
-end)
+end
 
-test:test("doesn't allow invalid child_of", function(test)
-    test:plan(1)
-    local tracer = new_tracer()
-    local ok, _ = pcall(function()
+g.test_fail_allow_invalid_chil_of = function()
+    local tracer = g.new_tracer()
+    t.assert_error(function()
         tracer:start_span("foo", { child_of = {} })
     end)
-    test:ok(not ok)
-end)
+end
 
-test:test("doesn't allow invalid references", function(test)
-    test:plan(1)
-    local tracer = new_tracer()
-    local ok, _ = pcall(function()
+g.test_fail_invalid_references = function()
+    local tracer = g.new_tracer()
+    t.assert_error(function()
         tracer:start_span("foo", { references = true })
     end)
-    test:ok(not ok)
-end)
+end
 
-test:test("works with custom extractor", function(test)
-    test:plan(1)
-    local tracer = new_tracer()
+g.test_works_with_custom_extracor = function()
+    local tracer = g.new_tracer()
     local extractor_arg
     local mock_extractor = function(arg)
         extractor_arg = arg
@@ -128,20 +116,18 @@ test:test("works with custom extractor", function(test)
     tracer:register_extractor("my_type", mock_extractor)
     local carrier = {}
     tracer:extract("my_type", carrier)
-    test:is_deeply(carrier, extractor_arg)
-end)
+    t.assert_equals(carrier, extractor_arg)
+end
 
-test:test("checks for known extractor", function(test)
-    test:plan(2)
-    local tracer = new_tracer()
+g.test_checks_for_known_extracor = function()
+    local tracer = g.new_tracer()
     local data, err = tracer:extract("my_unknown_type", {})
-    test:isnil(data)
-    test:is('Unknown format: my_unknown_type', err)
-end)
+    t.assert_equals(data, nil)
+    t.assert_equals(err, 'Unknown format: my_unknown_type')
+end
 
-test:test("works with custom injector", function(test)
-    test:plan(2)
-    local tracer = new_tracer()
+g.test_works_with_custom_injector = function()
+    local tracer = g.new_tracer()
     local injector_arg_ctx, injector_arg_carrier
     local mock_injector = function(context, carrier)
         injector_arg_ctx = context
@@ -153,13 +139,12 @@ test:test("works with custom injector", function(test)
     local context = span:context()
     local carrier = {}
     tracer:inject(context, "my_type", carrier)
-    test:is_deeply(context, injector_arg_ctx)
-    test:is_deeply(carrier, injector_arg_carrier)
-end)
+    t.assert_equals(context, injector_arg_ctx)
+    t.assert_equals(carrier, injector_arg_carrier)
+end
 
-test:test(":inject takes context", function(test)
-    test:plan(2)
-    local tracer = new_tracer()
+g.test_inject_takes_context = function()
+    local tracer = g.new_tracer()
     local injector_arg_ctx, injector_arg_carrier
     local mock_injector = function(context, carrier)
         injector_arg_ctx = context
@@ -170,18 +155,15 @@ test:test(":inject takes context", function(test)
     local context = span:context()
     local carrier = {}
     tracer:inject(span:context(), "my_type", carrier)
-    test:is_deeply(context, injector_arg_ctx)
-    test:is_deeply(carrier, injector_arg_carrier)
-end)
+    t.assert_equals(context, injector_arg_ctx)
+    t.assert_equals(carrier, injector_arg_carrier)
+end
 
-test:test("checks for known injector", function(test)
-    test:plan(2)
-    local tracer = new_tracer()
+g.test_checks_for_known_injector = function()
+    local tracer = g.new_tracer()
     local span = tracer:start_span("foo")
     local context = span:context()
     local data, err = tracer:inject(context, "my_unknown_type", {})
-    test:isnil(data)
-    test:is('Unknown format: my_unknown_type', err)
-end)
-
-os.exit(test:check() and 0 or 1)
+    t.assert_equals(data, nil)
+    t.assert_equals('Unknown format: my_unknown_type', err)
+end

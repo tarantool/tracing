@@ -33,7 +33,7 @@ jobs:
       matrix:
         tarantool-version: ["1.10", "2.10"]
       fail-fast: false
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
 
@@ -47,6 +47,7 @@ jobs:
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
+          ./deps.sh
           export PATH=.rocks/bin:$PATH
           tarantoolctl rocks make
       - name: Run linter
@@ -56,7 +57,7 @@ jobs:
       - name: Run tests
         run: |
           java -jar zipkin.jar &
-          sleep 10
+          sleep 20
           make unit
       - name: Build doc
         run: .rocks/bin/ldoc -t "$ROCK_NAME-${version}" -p "$ROCK_NAME (${version})" --all .
