@@ -4,7 +4,7 @@ local queue = require('tracing.zipkin.bounded_queue')
 
 g.test_size_1 = function()
     local q = queue.new(1)
-    
+
     t.assert_equals(#q.buffer, 0, "Initial queue size should be 0")
 
     q:push(1)
@@ -24,7 +24,7 @@ end
 
 g.test_size_3 = function()
     local q = queue.new(3)
-    
+
     t.assert_equals(#q.buffer, 0, "Initial queue size should be 0")
 
     q:push(1)
@@ -42,7 +42,7 @@ end
 
 g.test_clear = function()
     local q = queue.new(3)
-    
+
     t.assert_equals(#q.buffer, 0, "Initial queue size should be 0")
 
     q:push(1)
