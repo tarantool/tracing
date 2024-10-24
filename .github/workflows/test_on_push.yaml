@@ -44,13 +44,12 @@ jobs:
 
       - name: Install requirements for community
         run: |
-          apt-get install -y tt
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
           ./deps.sh
           export PATH=.rocks/bin:$PATH
-          tt rocks make
+          tarantoolctl rocks make
       - name: Run linter
         run: |
           .rocks/bin/luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
