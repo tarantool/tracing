@@ -62,8 +62,7 @@ jobs:
         run: |
           .rocks/bin/luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
           .rocks/bin/luacheck ./test --config=.luacheckrc --no-redefined --no-unused-args
-      - name: java version
-        run: java -version
+
       - name: Run tests
         run: |
           java -jar zipkin.jar &
