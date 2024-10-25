@@ -50,6 +50,7 @@ jobs:
 
       - name: Install requirements for community
         run: |
+          curl -L https://tarantool.io/release/2/installer.sh | bash 
           sudo apt-get -y install tt
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
