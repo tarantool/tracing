@@ -38,21 +38,31 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Setup Tarantool CE
-        uses: tarantool/setup-tarantool@v2
+        uses: tarantool/setup-tarantool@v3
         with:
           tarantool-version: ${{ matrix.tarantool-version }}
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install requirements for community
         run: |
+          curl -L https://tarantool.io/release/2/installer.sh | bash 
+          sudo apt-get -y install tt
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
-          tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
-          tarantoolctl rocks install luacheck 0.25.0
+          tt rocks install ldoc --server=http://rocks.moonscript.org
+          tt rocks install luacheck 0.25.0
+          ./deps.sh
           export PATH=.rocks/bin:$PATH
-          tarantoolctl rocks make
+          tt rocks make
       - name: Run linter
         run: |
           .rocks/bin/luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
           .rocks/bin/luacheck ./test --config=.luacheckrc --no-redefined --no-unused-args
+
       - name: Run tests
         run: |
           java -jar zipkin.jar &

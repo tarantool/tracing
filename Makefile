@@ -10,7 +10,7 @@ doc:
 
 .PHONY: build
 build:
-	tarantoolctl rocks make
+	tt rocks make
 
 .PHONY: lint
 lint:
@@ -22,11 +22,4 @@ TEST_FILES := \
 
 .PHONY: unit
 unit:
-	TEST_RESULT=0; \
-	for f in $(TEST_FILES); do \
-		echo -e '\nExecuting test '$(basename $$f)'...'; \
-		$$f; \
-		let TEST_RESULT=$$TEST_RESULT+$$?; \
-		[ $$TEST_RESULT -gt 0 ] && exit $$TEST_RESULT; \
-	done; \
-	exit $$TEST_RESULT
+	rm -f luacov.*.out* && .rocks/bin/luatest -v --coverage && .rocks/bin/luacov . && grep -A999 '^Summary' luacov.report.out

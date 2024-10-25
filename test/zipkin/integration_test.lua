@@ -1,13 +1,13 @@
-#!/usr/bin/env tarantool
+local t = require('luatest')
+local g = t.group()
 
-local test = require('tap').test('Zipkin integration')
 local fiber = require('fiber')
 local json = require('json')
 local log = require('log')
 local http_client = require('http.client')
-local ZipkinTracer = require('zipkin.tracer')
-local ZipkinHandler = require('zipkin.handler')
-local opentracing = require('opentracing')
+local ZipkinTracer = require('tracing.zipkin.tracer')
+local ZipkinHandler = require('tracing.zipkin.handler')
+local opentracing = require('tracing.opentracing')
 
 local Sampler = {
     sample = function() return true end,
@@ -19,14 +19,9 @@ local httpc = http_client.new()
 local function healthcheck()
     local result = httpc:get(base_url .. '/traces')
     if result.status ~= 200 then
-        log.warn('Zipkin is not active on http://localhost:9411/api/v2/. Skip integration tests')
-        os.exit(0)
+        error('Zipkin is not active on http://localhost:9411/api/v2/. Skip integration tests')
     end
 end
-
-healthcheck()
-
-test:plan(3)
 
 local function log_error(err)
     log.error('Zipkin reporter error: %s', err)
@@ -51,8 +46,11 @@ local function check_trace_id(trace_id)
     return trace[1]['traceId'] == trace_id
 end
 
-test:test('Background reporter', function(test)
-    test:plan(2)
+g.before_all(function()
+    healthcheck()
+end)
+
+g.test_background_reporter = function(test)
     local tracer = ZipkinTracer.new({
         base_url = base_url .. 'spans',
         api_method = 'POST',
@@ -67,14 +65,13 @@ test:test('Background reporter', function(test)
         }
     })
     span:log('dummy_reporter', 'log ' .. span_name)
-    test:ok(span:finish(), 'Successfully finish span. Background report')
+    t.assert(span:finish(), 'Successfully finish span. Background report')
     fiber.sleep(2)
     ZipkinHandler.stop()
-    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
-end)
+    t.assert(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
+end
 
-test:test('CLI-reporter', function(test)
-    test:plan(2)
+g.test_cli_reporter = function(test)
     local tracer = ZipkinTracer.new({
         base_url = base_url .. '/spans',
         api_method = 'POST',
@@ -88,13 +85,12 @@ test:test('CLI-reporter', function(test)
             ['kind'] = 'client',
         }
     })
-    test:ok(span:finish(), 'Successfully finish span. Client report')
-    test:ok(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
-end)
+    t.assert(span:finish(), 'Successfully finish span. Client report')
+    t.assert(check_trace_id(span:context().trace_id), 'Trace was correctly saved')
+end
 
-test:test('Several spans', function(test)
+g.test_several_spans = function(test)
     local child_span_count = 9
-    test:plan(child_span_count * 2 + 3)
     local report_interval = 2
     local tracer = ZipkinTracer.new({
         base_url = base_url .. 'spans',
@@ -131,16 +127,14 @@ test:test('Several spans', function(test)
     fiber.sleep(report_interval)
 
     local trace = get_trace(span:context().trace_id)
-    test:ok(trace, 'Trace was returned')
-    test:ok(#trace == 10, '1 root + 9 child spans')
+    t.assert(trace, 'Trace was returned')
+    t.assert(#trace == 10, '1 root + 9 child spans')
     table.sort(trace, function(a, b) return a.name < b.name end)
-    test:is(context.span_id, trace[10].id, 'Root span id correct')
+    t.assert(context.span_id, trace[10].id, 'Root span id correct')
     for i = 1, child_span_count do
-        test:is('child_span ' .. tostring(i), trace[i].name,
+        t.assert('child_span ' .. tostring(i), trace[i].name,
                 ('Child span name %s is ok'):format(i))
-        test:is(context.span_id, trace[i].parentId,
+        t.assert(context.span_id, trace[i].parentId,
                 ('Parent id of %s is ok'):format(i))
     end
-end)
-
-os.exit(test:check() and 0 or 1)
+end
