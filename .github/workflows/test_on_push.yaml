@@ -44,8 +44,8 @@ jobs:
 
       - name: Install requirements for community
         run: |
-          apt-get -y update
-          apt-get -y install openjdk-17-jdk
+          sudo apt-get -y update
+          sudo apt-get -y install openjdk-17-jdk
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
