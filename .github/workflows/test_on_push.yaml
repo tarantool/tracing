@@ -53,11 +53,11 @@ jobs:
           curl -L https://tarantool.io/release/2/installer.sh | bash 
           sudo apt-get -y install tt
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
-          tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
-          tarantoolctl rocks install luacheck 0.25.0
+          tt rocks install ldoc --server=http://rocks.moonscript.org
+          tt rocks install luacheck 0.25.0
           ./deps.sh
           export PATH=.rocks/bin:$PATH
-          tarantoolctl rocks make
+          tt rocks make
       - name: Run linter
         run: |
           .rocks/bin/luacheck ./tracing --config=.luacheckrc --no-redefined --no-unused-args
@@ -67,7 +67,7 @@ jobs:
       - name: Run tests
         run: |
           java -jar zipkin.jar &
-          sleep 20
+          sleep 10
           make unit
       - name: Build doc
         run: .rocks/bin/ldoc -t "$ROCK_NAME-${version}" -p "$ROCK_NAME (${version})" --all .
