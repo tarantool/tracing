@@ -44,7 +44,6 @@ jobs:
 
       - name: Install requirements for community
         run: |
-          apt -y update
           apt -y install openjdk-17-jdk
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
