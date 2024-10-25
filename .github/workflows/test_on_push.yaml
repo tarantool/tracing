@@ -47,7 +47,8 @@ jobs:
           sudo apt-get -y update
           sudo add-apt-repository ppa:linuxuprising/java
           sudo apt-get -y install openjdk-21-jdk
-          sudo update-alternatives --config java
+          sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-21-openjdk-amd64/bin/java 1
+          sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
           curl -sSL https://zipkin.io/quickstart.sh | bash -s
           tarantoolctl rocks install ldoc --server=http://rocks.moonscript.org
           tarantoolctl rocks install luacheck 0.25.0
